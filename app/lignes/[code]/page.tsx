@@ -124,13 +124,7 @@ export default function DashboardLignePage() {
                   : "Aucun OF ne correspond à ce filtre"}
               </div>
             ) : (
-              filteredOfs.map((of) => (
-                <OfCard
-                  key={of.of}
-                  of={of}
-                  posteTechnique={data.ligne.poste_technique}
-                />
-              ))
+              filteredOfs.map((of) => <OfCard key={of.of} of={of} />)
             )}
           </main>
         </>

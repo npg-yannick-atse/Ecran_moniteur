@@ -311,38 +311,6 @@ export interface OfComposant {
   dateLivraison: string | null
 }
 
-/**
- * Statut utilisateur proposable à l'opérateur (table ref_user_status).
- * `id` correspond au `userStatusId` attendu par l'API service-of.
- */
-export interface StatusUtilisateurOption {
-  id: number
-  code: string // OFDE, PPR, PTE…
-  designation: string
-  color: string
-  /** id 2 (OFDE) : l'API exige en plus le poste technique de la ligne */
-  requiertProcessCode: boolean
-}
-
-/** Corps envoyé à PUT /api/v2/of/:of/status-utilisateur */
-export interface ChangeStatusUtilisateurRequest {
-  userStatusId: number
-  commentaire?: string
-  /** Poste technique de la ligne — obligatoire pour passer en OF Débuté */
-  fillProcessCode?: string
-  /** Traçabilité : ID utilisateur, ou createdBy pour un nom libre */
-  userId?: number
-  createdBy?: string
-}
-
-export interface ChangeStatusUtilisateurResponse {
-  ok: boolean
-  /** Message renvoyé par service-of (succès ou refus métier) */
-  message?: string
-  /** Réponse brute de service-of, telle quelle */
-  data?: unknown
-}
-
 export interface OfComposantsResponse {
   of: string
   sfOf: string | null

@@ -14,7 +14,6 @@ import { StatusPill } from "./status-pill"
 import { Timeline } from "./timeline"
 import { ComposantsModal } from "./composants-modal"
 import { SfModal } from "./sf-modal"
-import { StatusChangeModal } from "./status-change-modal"
 import {
   AlertTriangle,
   Beaker,
@@ -31,8 +30,6 @@ import { TIMELINE_LEGEND_ITEMS, LegendChip } from "./timeline-legend"
 
 interface Props {
   of: OfRow
-  /** Poste technique de la ligne — exigé par service-of pour passer en OFDE */
-  posteTechnique?: string | null
 }
 
 /**
@@ -42,11 +39,10 @@ interface Props {
 const BADGE_BASE =
   "inline-flex select-none items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold tabular-nums"
 
-export const OfCard = memo(function OfCard({ of, posteTechnique }: Props) {
+export const OfCard = memo(function OfCard({ of }: Props) {
   const [showComposants, setShowComposants] = useState(false)
   const [showSf, setShowSf] = useState(false)
   const [showLegend, setShowLegend] = useState(false)
-  const [showStatut, setShowStatut] = useState(false)
   const rempliPct =
     of.quantite > 0 ? Math.round((of.qteRempli / of.quantite) * 100) : 0
   // Ratios bruts (peuvent dépasser 100% — feedback user : afficher la vraie valeur)
@@ -174,14 +170,7 @@ export const OfCard = memo(function OfCard({ of, posteTechnique }: Props) {
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setShowStatut(true)}
-            title="Changer le statut utilisateur de l'OF"
-            className="rounded-full transition-transform hover:scale-105"
-          >
-            <StatusPill status={of.statusUtilisateur} />
-          </button>
+          <StatusPill status={of.statusUtilisateur} />
           {dernierStatut && (
             <span
               className="inline-flex select-none items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold tabular-nums"
@@ -486,14 +475,6 @@ export const OfCard = memo(function OfCard({ of, posteTechnique }: Props) {
       )}
 
       {showSf && <SfModal of={of} onClose={() => setShowSf(false)} />}
-
-      {showStatut && (
-        <StatusChangeModal
-          of={of}
-          posteTechnique={posteTechnique ?? null}
-          onClose={() => setShowStatut(false)}
-        />
-      )}
     </div>
   )
 })
