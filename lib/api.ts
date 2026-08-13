@@ -7,9 +7,12 @@
  */
 
 import type {
+  ChangeStatusUtilisateurRequest,
+  ChangeStatusUtilisateurResponse,
   DashboardResponse,
   OfComposantsResponse,
   ProcessListResponse,
+  StatusUtilisateurOption,
 } from "./types"
 
 async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
@@ -42,4 +45,39 @@ export const api = {
       `/api/v2/of/${encodeURIComponent(of)}/composants`,
       signal
     ),
+
+  /** Statuts utilisateur proposables — relayé depuis service-of */
+  statutsUtilisateur: (signal?: AbortSignal) =>
+    fetchJson<{ statuts: StatusUtilisateurOption[] }>(
+      "/api/v2/status-utilisateur",
+      signal
+    ),
+
+  /**
+   * Change le statut utilisateur d'un OF via service-of.
+   * Ne lève pas sur un refus métier : le message de service-of est renvoyé
+   * dans `message` avec `ok: false`, pour être affiché tel quel à l'opérateur.
+   */
+  changerStatutUtilisateur: async (
+    of: string,
+    corps: ChangeStatusUtilisateurRequest
+  ): Promise<ChangeStatusUtilisateurResponse> => {
+    const res = await fetch(
+      `/api/v2/of/${encodeURIComponent(of)}/status-utilisateur`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(corps),
+      }
+    )
+    const data = await res.json().catch(() => ({}))
+    return {
+      ok: res.ok && data.ok !== false,
+      message: data.message ?? data.error,
+      data: data.data,
+    }
+  },
 }
