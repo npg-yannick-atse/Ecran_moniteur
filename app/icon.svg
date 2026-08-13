@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Favicon de l'écran de suivi production.
+       Convention Next.js App Router : app/icon.svg est détecté automatiquement
+       et injecté en <link rel="icon"> — rien à déclarer dans layout.tsx.
+       Motif : les 3 barres de progression en cascade de la carte OF
+       (Rempli → Fardelé → Livré), lisible jusqu'à 16 px. -->
+  <rect width="32" height="32" rx="7" fill="#008ea9"/>
+  <g fill="#ffffff">
+    <rect x="6"    y="17" width="5" height="8"  rx="1.5" opacity="0.55"/>
+    <rect x="13.5" y="12" width="5" height="13" rx="1.5" opacity="0.8"/>
+    <rect x="21"   y="7"  width="5" height="18" rx="1.5"/>
+  </g>
+</svg>

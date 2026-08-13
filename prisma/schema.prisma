@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Of {
+  id_of                         Int                         @id(map: "PK__Of__0148BB9CC61677FB") @default(autoincrement())
+  of                            String                      @db.NVarChar(15)
+  quantite                      Float?
+  qte_ctr_recept_logistique     Float?
+  qte_pce_recept_logistique     Float?
+  qte_livrer_semi               Float?
+  date_recept_logistique        DateTime?                   @db.DateTimeOffset
+  unite                         String                      @db.NVarChar(15)
+  process                       String?                     @db.NVarChar(15)
+  debut_ordonnancement          DateTime?                   @db.DateTimeOffset
+  date_creation_of              DateTime?                   @db.Date
+  heure_creation_of             DateTime?                   @db.Time
+  section_code                  String?                     @db.NVarChar(5)
+  section_nom                   String?                     @db.NVarChar(50)
+  poste_travail                 String?                     @db.NVarChar(12)
+  code_article                  String?                     @db.NVarChar(20)
+  designation_article           String?                     @db.NVarChar(100)
+  zone_tampon                   String?                     @db.NVarChar(6)
+  magasin                       String?                     @db.NVarChar(10)
+  type_article                  String?                     @db.NVarChar(6)
+  gestionnaire                  String?                     @db.NVarChar(6)
+  colisage                      Float?
+  gerbage                       Int?
+  numero_lo                     String?                     @db.NVarChar(10)
+  division                      String?                     @db.NVarChar(10)
+  download_by                   String?                     @db.NVarChar(100)
+  date_Livraison                DateTime?                   @db.DateTimeOffset
+  createdAt                     DateTime                    @db.DateTimeOffset
+  updatedAt                     DateTime                    @updatedAt @db.DateTimeOffset
+  id_status_FK                  Int?
+  id_statusUtilisateur_FK       Int?
+  qte_remplir                   Float?
+  qte_polypacker                Float?
+  qte_livrer                    Float?
+  id_status_production          Int?
+  of_secondary                  String?                     @db.NVarChar(15)
+  numero_lot_controle           String?                     @db.NVarChar(20)
+  fiche_anomalie                Int?
+  nb_effectif                   String?                     @db.NVarChar(10)
+  cadence                       String?                     @db.NVarChar(10)
+  base_temps                    String?                     @db.NVarChar(10)
+  temps_changement              String?                     @db.NVarChar(10)
+  date_fin_ordonnancement       DateTime?                   @db.Date
+  date_debut_ordonnancement     DateTime?                   @db.Date
+  heure_fin_ordonnancement      DateTime?                   @db.Time
+  heure_debut_ordonnancement    DateTime?                   @db.Time
+  commentaire_demande_composant String?                     @db.NVarChar(500)
+
+  @@map("Of")
+}
+
+model of_item {
+  id_of_item                Int       @id @default(autoincrement())
+  of                        String    @db.NVarChar(12)
+  code_article              String    @db.NVarChar(18)
+  groupe_march              String?   @db.NVarChar(9)
+  type_article              String?   @db.NVarChar(20)
+  designation_article       String?   @db.NVarChar(40)
+  quantite                  Float?
+  unite                     String?   @db.NVarChar(3)
+  magasin                   String?   @db.NVarChar(4)
+  batch                     String?   @db.NVarChar(20)
+  type_poste                String?   @db.Char(1)
+  numero_poste              String?   @db.NVarChar(6)
+  numero_reservation        String?   @db.NVarChar(10)
+  numeroPost_reservation    String?   @db.NVarChar(4)
+  qte_requise               Float?
+  qte_prepare               Float?
+  qte_transfere             Float?
+  qte_receptionne           Float?
+  qte_transfere_cnd         Float?
+  qte_consomme              Float?
+  qte_restant_cnd           Float?
+  qte_restant_zone          Float?
+  date_Livraison            DateTime? @db.DateTimeOffset
+  annuler                   Int?
+  annuler_preparation       Int?
+  annuler_transfere         Int?
+  annuler_reception         Int?
+  createdAt                 DateTime  @db.DateTimeOffset
+  updatedAt                 DateTime  @db.DateTimeOffset
+  id_of_FK                  Int?
+  id_status_FK              Int?
+  id_status_production      Int?
+  zone_tampon               String?   @db.NVarChar(6)
+
+  @@map("of_item")
+}
+
+
+model Process {
+  id_process      Int              @id(map: "PK__process__4D1766E0CD51D56E") @default(autoincrement())
+  code            String?          @db.NVarChar(20)
+  designation     String?          @db.NVarChar(255)
+  ligne           String?          @db.NVarChar(20)
+  type            String?          @db.NVarChar(5)
+  min             Int?
+  max             Int?
+  order           Int?
+  id_zone_FK      Int?
+  poste_technique String?          @db.NVarChar(20)
+  access_control_id    Int?
+  nombre_effectif      Int?
+  of_current_process   String?   @db.NVarChar(255)
+
+  @@map("process")
+}
+
+model fiche_cheminement {
+  id_fiche             Int       @id(map: "PK__fiche_ch__427B0F8EAC8D3235") @default(autoincrement())
+  remplissage          Int?
+  qte_remplissage      Float?    @db.Float(53)
+  remplissage_by       String?   @db.NVarChar(100)
+  remplissage_date     DateTime? @db.DateTimeOffset
+  polypackage          Int?
+  qte_polypackage      Float?    @db.Float(53)
+  polypackage_by       String?   @db.NVarChar(100)
+  polypackage_date     DateTime? @db.DateTimeOffset
+  livraison            Int?
+  qte_livraison        Float?    @db.Float(53)
+  livraison_by         String?   @db.NVarChar(100)
+  livraison_date       DateTime? @db.DateTimeOffset
+  impression           Int?
+  qte_impression       Float?    @db.Float(53)
+  unite                String?   @db.NVarChar(10)
+  impression_by        String?   @db.NVarChar(100)
+  impression_date      DateTime? @db.DateTimeOffset
+  annuler              Int?
+  annuler_by           String?   @db.NVarChar(50)
+  annuler_date         DateTime? @db.DateTimeOffset
+  created_by           String?   @db.NVarChar(100)
+  indice               Int?
+  qrCode               String?   @db.NVarChar(255)
+  ref                  String?   @db.NVarChar(255)
+  createdAt            DateTime  @db.DateTimeOffset
+  updatedAt            DateTime  @db.DateTimeOffset
+  id_of_FK             Int?
+  reception_livraison  Int?
+  qte_receptionne      Float?    @db.Float(53)
+  receptionn_by        String?   @db.NVarChar(100)
+  reception_date       DateTime? @db.DateTimeOffset
+  duree_production     Int?
+}
+
+model of_has_status {
+  id              Int       @id @default(autoincrement())
+  created_by      String?   @db.NVarChar(50)
+  commentaire     String?   @db.NVarChar(255)
+  quantite        Float?
+  unite           String?   @db.NVarChar(6)
+  annuler         Int?
+  annuler_by      String?   @db.NVarChar(50)
+  annuler_date    DateTime? @db.DateTimeOffset
+  operation_code  String?   @db.NVarChar(5)
+  id_status_FK   Int?
+  id_of_FK       Int?
+  id_fiche_FK    Int?
+  createdAt       DateTime   @db.DateTimeOffset
+  updatedAt       DateTime   @db.DateTimeOffset
+}
+
+model Of_has_statusUtilisateurs {
+  id                        Int       @id @default(autoincrement())
+  created_by                String?   @db.NVarChar(50)
+  raison                    String?   @db.NVarChar(255)
+  commentaire               String?   @db.NVarChar(255)
+  createdAt                 DateTime  @db.DateTimeOffset
+  updatedAt                 DateTime  @db.DateTimeOffset
+  id_statusUtilisateur_FK    Int?
+  id_of_FK                  Int?
+}
+
+model status {
+  id_status        Int      @id @default(autoincrement())
+  designation      String?  @db.NVarChar(100)
+  color            String?  @db.NVarChar(20)
+  createdAt        DateTime @db.DateTimeOffset
+  updatedAt        DateTime @db.DateTimeOffset
+  partiellement    Int?
+  viewProcess      Int?
+}
+
+model statusUtilisateur {
+  id_statusUtilisateur  Int      @id @default(autoincrement())
+  code                 String?  @db.NVarChar(20)
+  designation          String?  @db.NVarChar(50)
+  color                String?  @db.NVarChar(20)
+  activer              Int?
+  createdAt            DateTime @db.DateTimeOffset
+  updatedAt            DateTime @db.DateTimeOffset
+  vueWeb               Int?
+  vueMobil             Int?
+}
+
+model entete_fiche_anomalie {
+  id_entete_fiche_anomalie    Int      @id @default(autoincrement())
+  of                          String?  @db.NVarChar(15)
+  code_article                String?  @db.NVarChar(20)
+  designation_article         String?  @db.NVarChar(100)
+  numero_lot                  String?  @db.NVarChar(10)
+  numero_lot_controle         String?  @db.NVarChar(20)
+  remarque                    String?  @db.NVarChar(255)
+  commentaire_decision        String?  @db.NVarChar(255)
+  created_by                  String?  @db.NVarChar(50)
+  createdAt                   DateTime @db.DateTimeOffset
+  updatedAt                   DateTime @db.DateTimeOffset
+  id_of_FK                    Int?
+  accepte                     Int?
+  accept_except               Int?
+  refuse                      Int?
+}
+
+
+model entete_resultat_inspect {
+  id_enteteResultatInspect   Int      @id @default(autoincrement())
+  inspectLot                 String   @db.NVarChar(12)
+  operation                  String?  @db.NVarChar(4)
+  echantillon                Int?
+  of                         String?  @db.NVarChar(20)
+  created_by                 String?  @db.NVarChar(100)
+  createdAt                  DateTime @db.DateTimeOffset
+  updatedAt                  DateTime @db.DateTimeOffset
+  id_of_FK                   Int?
+  quantite_valide            Int?
+  poids                      Float?
+  nombre_echantillon         Float?
+
+  @@map("entete_resultat_inspect")
+}
+
+model conditionnement_has_status {
+  id                        Int      @id @default(autoincrement())
+  created_by                String?  @db.NVarChar(30)
+  commentaire               String?  @db.NVarChar(255)
+  quantite                  Float?
+  annuler                   Int?
+  annuler_by                String?  @db.NVarChar(50)
+  annuler_date              DateTime? @db.DateTimeOffset
+  operation_code            String?  @db.NVarChar(5)
+  cardID                    String?  @db.NVarChar(255)
+  createdAt                 DateTime @db.DateTimeOffset
+  updatedAt                 DateTime @db.DateTimeOffset
+  id_status_FK              Int?
+  id_conditionnement_FK     Int?
+  id_fiche_FK               Int?
+  cardID_cancel             String?  @db.NVarChar(255)
+
+  @@map("conditionnement_has_status")
+}
+
+
+model conditionnement {
+  id_conditionnement     Int      @id @default(autoincrement())
+  of                    String?  @db.NVarChar(15)
+  qte_receptionner      Float?
+  qte_consomme          Float?
+  qte_restant           Float?
+  qte_retourne          Float?
+  return_by             String?  @db.NVarChar(255)
+  return_date           DateTime? @db.DateTimeOffset
+  created_by            String?  @db.NVarChar(255)
+  cardID                String?  @db.NVarChar(255)
+  annuler               Int?
+  annuler_by            String?  @db.NVarChar(50)
+  createdAt             DateTime @db.DateTimeOffset
+  updatedAt             DateTime @db.DateTimeOffset
+  id_of_item_FK         Int?
+  id_of_FK              Int?
+  id_raisonReturn_FK    Int?
+  code_article          String?  @db.NVarChar(18)
+
+  @@map("conditionnements")
+}
+
+
+model warehouse_preparation {
+  id_preparation           Int      @id @default(autoincrement())
+  batch                    String   @db.NVarChar(15)
+  code_article             String   @db.NVarChar(20)
+  designation_article      String?  @db.NVarChar(100)
+  zone_tampon              String?  @db.NVarChar(10)
+  prepared_by              String?  @db.NVarChar(50)
+  transfere_by             String?  @db.NVarChar(50)
+  receptionne_by           String?  @db.NVarChar(50)
+  qr_code_value            String   @db.NVarChar(1000)
+  quantite_preparer        Float?
+  quantite_transfere       Float?
+  quantite_receptionner    Float?
+  qte_restant_zone         Float?
+  quantite_consommer       Float?
+  quantite_restant         Float?
+  unite                    String?  @db.NVarChar(3)
+  annuler                  Int?
+  annuler_by               String?  @db.NVarChar(50)
+  magasin                  String?  @db.NVarChar(4)
+  of                       String   @db.NVarChar(12)
+  id_item_bc               Int?
+  createdAt                DateTime @db.DateTimeOffset
+  updatedAt                DateTime @db.DateTimeOffset
+  id_of_item_FK            Int?
+  numero_reservation       String?  @db.NVarChar(10)
+  numeroPost_reservation   String?  @db.NVarChar(4)
+
+  @@map("warehouse_preparation")
+}
+
+model operation_has_ficheCheminement {
+  id                     Int      @id @default(autoincrement())
+  of                     String   @db.NVarChar(20)
+  indice_palette         Int?
+  operation_code         String?  @db.NVarChar(6)
+  quantite               Float?
+  created_by             String?  @db.NVarChar(50)
+  commentaire            String?  @db.NVarChar(255)
+  annuler                Int?
+  annuler_by             String?  @db.NVarChar(50)
+  annuler_date           DateTime?
+  confirmation_final     String?  @db.NVarChar(1)
+  material_document      String?  @db.NVarChar(20)
+  material_document_year String?  @db.NVarChar(4)
+  conf_no                String?  @db.NVarChar(20)
+  conf_cnt               String?  @db.NVarChar(20)
+  createdAt              DateTime 
+  updatedAt              DateTime 
+  id_fiche_FK            Int?
+  id_operation_FK        Int?
+
+  @@map("operation_has_ficheCheminement")
+}

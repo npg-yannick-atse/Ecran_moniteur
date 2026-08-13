@@ -1,0 +1,19 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.log
+.DS_Store
+
+logs
+
+# Certificats TLS — la clé privée ne doit jamais partir dans un dépôt
+npgandour.com/
+*.key
+*.pem
+
+# Artefacts de build TypeScript
+*.tsbuildinfo
+.env.*
+!.env.example
