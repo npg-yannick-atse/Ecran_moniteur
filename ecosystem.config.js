@@ -18,10 +18,9 @@ const PORT = process.env.PORT || 8082
 // Port TLS. Égal à PORT par défaut : le serveur sert HTTPS et redirige le HTTP
 // en clair sur ce même port. Mettre 443 pour des URLs sans numéro de port.
 const HTTPS_PORT = process.env.HTTPS_PORT || PORT
-
-// Ligne affichée par le kiosque local (voir l'app "ecran-kiosque" plus bas).
-// Vide → page d'accueil (choix de la section).
-const KIOSK_LIGNE = process.env.KIOSK_LIGNE || ""
+// Nom d'hôte couvert par le certificat. Sert de cible aux redirections quand
+// un écran arrive encore par l'IP du serveur (voir server.js).
+const PUBLIC_HOST = process.env.PUBLIC_HOST || "gmon.npgandour.com"
 
 module.exports = {
   apps: [
@@ -43,6 +42,7 @@ module.exports = {
         PORT, // HTTP : redirige vers HTTPS quand TLS est actif
         HTTPS_PORT,
         SSL_DIR: "npgandour.com",
+        PUBLIC_HOST,
       },
       time: true,
       out_file: "logs/out.log",
@@ -50,54 +50,5 @@ module.exports = {
       merge_logs: true,
     },
 
-    /**
-     * Affichage plein écran sur CETTE machine.
-     *
-     * Une page web ne peut pas se mettre en plein écran seule (geste utilisateur
-     * obligatoire côté navigateur). On passe donc par la ligne de commande du
-     * navigateur, pilotée par PM2 : `pm2 start ecosystem.config.js` démarre le
-     * serveur ET l'écran.
-     *
-     * Prérequis :
-     *   - l'écran est branché sur cette machine (sinon, inutile : ce process ne
-     *     peut pas ouvrir de fenêtre à distance) ;
-     *   - PM2 tourne dans une session Windows OUVERTE. En service Windows
-     *     (session 0), aucune fenêtre ne s'affiche.
-     *
-     * Démarrer le serveur seul (salle technique, pas d'écran) :
-     *   pm2 start ecosystem.config.js --only ecran-moniteur
-     *
-     * Choisir la ligne affichée :
-     *   KIOSK_LIGNE=L019SHP pm2 start ecosystem.config.js
-     */
-    {
-      name: "ecran-kiosque",
-      cwd: __dirname,
-      script: "scripts/launch-kiosk.js",
-      interpreter: "node",
-      exec_mode: "fork",
-      instances: 1,
-      // Relance si quelqu'un ferme la fenêtre par erreur, avec un délai pour
-      // éviter la boucle rapide quand aucun navigateur n'est installé.
-      autorestart: true,
-      restart_delay: 5000,
-      watch: false,
-      env: {
-        // Le kiosque attaque le serveur en HTTPS : sur une URL en https, un
-        // certificat wildcard exige un NOM D'HÔTE, pas localhost ni une IP.
-        KIOSK_URL: process.env.KIOSK_URL || "",
-        PORT: HTTPS_PORT,
-        // Nom d'hôte, pas localhost ni une IP : le certificat wildcard
-        // *.npgandour.com n'est valable que pour un nom de ce domaine.
-        KIOSK_HOST: process.env.KIOSK_HOST || "gmon.npgandour.com",
-        KIOSK_LIGNE,
-        // "kiosk" = verrouillé · "fullscreen" = Échap et F11 fonctionnent
-        KIOSK_MODE: process.env.KIOSK_MODE || "kiosk",
-      },
-      time: true,
-      out_file: "logs/kiosque-out.log",
-      error_file: "logs/kiosque-error.log",
-      merge_logs: true,
-    },
   ],
 }

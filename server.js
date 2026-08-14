@@ -25,6 +25,8 @@
  *   PORT         port d'écoute (défaut 8082)
  *   HTTPS_PORT   port TLS — défaut = PORT. Le fixer (443 p. ex.) sépare les deux
  *   SSL_DIR      dossier des certificats
+ *   PUBLIC_HOST  nom d'hôte couvert par le certificat (ex. gmon.npgandour.com).
+ *                Cible des redirections quand le client arrive par l'IP.
  *   HTTP_REDIRECT=off   supprime la redirection quand les ports sont distincts
  */
 
@@ -43,6 +45,9 @@ const HTTP_PORT = Number(process.env.PORT || 8082)
 // plus bas). Mettre HTTPS_PORT=443 pour séparer les deux si besoin.
 const HTTPS_PORT = Number(process.env.HTTPS_PORT || HTTP_PORT)
 const SSL_DIR = path.resolve(__dirname, process.env.SSL_DIR || "npgandour.com")
+// Nom d'hôte public, celui couvert par le certificat. Sert de cible aux
+// redirections quand le client est arrivé par l'IP (cf. plus bas).
+const PUBLIC_HOST = process.env.PUBLIC_HOST || ""
 
 function lireCertificats() {
   const key = path.join(SSL_DIR, "private.key")
@@ -78,10 +83,20 @@ async function main() {
 
   const serveurHttps = https.createServer(tls, servirNext)
 
-  // Redirection HTTP → HTTPS. On garde le nom d'hôte demandé : avec un
-  // certificat wildcard, rediriger vers une IP casserait la validation TLS.
+  // Redirection HTTP → HTTPS.
+  //
+  // Piège : les écrans déjà déployés pointent souvent sur l'IP du serveur
+  // (http://10.10.10.200:8082/...). Rediriger tel quel les enverrait sur
+  // https://10.10.10.200:8082 — refusé, le certificat ne couvre que
+  // *.npgandour.com. On réécrit donc vers PUBLIC_HOST quand l'hôte demandé
+  // est une IP ou localhost, pour que ces écrans continuent de fonctionner
+  // sans avoir à retoucher leur URL un par un.
+  const estSansNom = (h) =>
+    !h || h === "localhost" || /^\d{1,3}(\.\d{1,3}){3}$/.test(h)
   const serveurRedirection = http.createServer((req, res) => {
-    const hote = (req.headers.host || "").split(":")[0]
+    const demande = (req.headers.host || "").split(":")[0]
+    const hote =
+      PUBLIC_HOST && estSansNom(demande) ? PUBLIC_HOST : demande || PUBLIC_HOST
     const port = HTTPS_PORT === 443 ? "" : `:${HTTPS_PORT}`
     res.writeHead(301, { Location: `https://${hote}${port}${req.url}` })
     res.end()
