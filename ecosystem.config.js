@@ -43,6 +43,11 @@ module.exports = {
         HTTPS_PORT,
         SSL_DIR: "npgandour.com",
         PUBLIC_HOST,
+        // Derrière l'openresty de prod, c'est le proxy qui termine le TLS :
+        // l'app doit rester en HTTP simple, sinon le proxy reçoit une
+        // redirection 301 au lieu de la page. Mettre TLS=on (ou supprimer
+        // cette ligne) uniquement si l'app est exposée en direct.
+        TLS: process.env.TLS || "off",
       },
       time: true,
       out_file: "logs/out.log",

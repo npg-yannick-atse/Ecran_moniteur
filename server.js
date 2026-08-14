@@ -27,6 +27,8 @@
  *   SSL_DIR      dossier des certificats
  *   PUBLIC_HOST  nom d'hôte couvert par le certificat (ex. gmon.npgandour.com).
  *                Cible des redirections quand le client arrive par l'IP.
+ *   TLS=off      force le HTTP simple — à utiliser DERRIÈRE UN REVERSE PROXY,
+ *                qui assure alors lui-même la terminaison TLS
  *   HTTP_REDIRECT=off   supprime la redirection quand les ports sont distincts
  */
 
@@ -50,6 +52,15 @@ const SSL_DIR = path.resolve(__dirname, process.env.SSL_DIR || "npgandour.com")
 const PUBLIC_HOST = process.env.PUBLIC_HOST || ""
 
 function lireCertificats() {
+  // TLS=off : l'app sert en HTTP simple même si les certificats sont là.
+  // Indispensable DERRIÈRE UN REVERSE PROXY (openresty/nginx) : c'est le proxy
+  // qui termine le TLS et qui parle à l'app en clair. Si Node se mettait à
+  // faire du TLS sur son port, le proxy recevrait une redirection 301 au lieu
+  // de la page et le site tomberait.
+  if ((process.env.TLS || "").toLowerCase() === "off") {
+    console.log("[server] TLS=off → HTTP simple (terminaison TLS déléguée)")
+    return null
+  }
   const key = path.join(SSL_DIR, "private.key")
   const cert = path.join(SSL_DIR, "certificate.crt")
   const ca = path.join(SSL_DIR, "ca_bundle.crt")
