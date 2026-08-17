@@ -54,9 +54,15 @@ function Tile({
   // les statuts clairs (ex. "Manque de composant" #d9e838) sont illisibles sur
   // le fond slate-100.
   const textColor = darkenForText(color)
+  // Une tuile à 0 reste affichée mais s'efface visuellement : l'information
+  // « aucun OF dans ce statut » doit être lisible sans capter l'attention.
+  const vide = (count ?? 0) === 0 && !value
   return (
     <div
-      className="flex flex-1 items-center gap-3 rounded-lg bg-slate-100 px-4 py-2"
+      className={cn(
+        "flex min-w-[9rem] flex-1 items-center gap-3 rounded-lg px-4 py-2",
+        vide ? "bg-slate-50 opacity-60" : "bg-slate-100"
+      )}
       title={title}
     >
       <div className="h-10 w-1 rounded-sm" style={{ background: color }} />
@@ -105,8 +111,10 @@ function formatKpiWithTotal(
 }
 
 export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
+  // flex-wrap : le référentiel complet fait une quinzaine de tuiles, elles ne
+  // tiennent plus sur une seule ligne comme avant.
   return (
-    <div className="flex gap-4 border-b border-slate-200 bg-white px-6 py-4">
+    <div className="flex flex-wrap gap-3 border-b border-slate-200 bg-white px-6 py-4">
       {ITEMS.map((item) => {
         const value = kpis[item.key] as number
         const total = item.totalKey ? (kpis[item.totalKey] as number) : null

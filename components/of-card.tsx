@@ -91,14 +91,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
         ? "SF terminé après le démarrage du PF"
         : "PF démarré alors que le SF n'est pas terminé"
 
-  // Durée production affichée = cumul des durées de TOUS les statuts de la
-  // bande timeline. Calculé ici (et pas côté API) pour garantir que le chiffre
-  // de la carte est exactement la somme des bandes affichées.
-  const dureeStatutsCumulMinutes = of.statusHistoryPF.reduce(
-    (s, p) => s + p.durationMin,
-    0
-  )
-
   // Dernière période de statut = statut courant de l'OF. Sa durée court
   // jusqu'à maintenant (calculée côté API, rafraîchie à chaque poll).
   // NB : statusHistoryPF exclut "OF Validé", donc ce statut peut différer de
@@ -136,22 +128,26 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             <span className="mx-1 text-slate-400">—</span>
             {of.designationArticle}
           </span>
-          <span
-            className={cn(
-              BADGE_BASE,
-              of.nbEffectifOF != null &&
-                of.nbEffectifLigne != null &&
-                of.nbEffectifOF < of.nbEffectifLigne
-                ? "border-amber-300 bg-amber-50 text-amber-700"
-                : "border-slate-300 bg-slate-50 text-slate-700"
-            )}
-            title="Effectif prévu sur la ligne / effectif affecté à l'OF (opération 0010)"
-          >
-            <span className="opacity-70">Effectif</span>{" "}
-            {of.nbEffectifLigne != null ? of.nbEffectifLigne : "—"}
-            <span className="mx-1 opacity-40">/</span>
-            {of.nbEffectifOF != null ? Math.round(of.nbEffectifOF) : "—"}
-          </span>
+          {/* Effectif masqué tant que l'OF n'a pas démarré : personne n'y est
+              encore affecté, le chiffre ne voudrait rien dire. */}
+          {of.dateDebutProduction != null && (
+            <span
+              className={cn(
+                BADGE_BASE,
+                of.nbEffectifOF != null &&
+                  of.nbEffectifLigne != null &&
+                  of.nbEffectifOF < of.nbEffectifLigne
+                  ? "border-amber-300 bg-amber-50 text-amber-700"
+                  : "border-slate-300 bg-slate-50 text-slate-700"
+              )}
+              title="Effectif prévu sur la ligne / effectif affecté à l'OF (opération 0010)"
+            >
+              <span className="opacity-70">Effectif</span>{" "}
+              {of.nbEffectifLigne != null ? of.nbEffectifLigne : "—"}
+              <span className="mx-1 opacity-40">/</span>
+              {of.nbEffectifOF != null ? Math.round(of.nbEffectifOF) : "—"}
+            </span>
+          )}
           {of.consommationEnergie != null && (
             <span
               className={cn(
@@ -334,8 +330,12 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 {sfDebutTs == null ? "Non débuté" : "En retard"}
               </span>
             )}
-            <span className="text-[10px] text-slate-600">
-              {formatNumber(of.sf.qteFabriquee)} / {formatNumber(of.sf.quantite)}
+            {/* Quantité SF agrandie : c'est le chiffre que l'on cherche de
+                loin sur la ligne, il était en 10px. */}
+            <span className="whitespace-nowrap text-base font-bold tabular-nums text-slate-700">
+              {formatNumber(of.sf.qteFabriquee)}
+              <span className="mx-1 font-normal text-slate-400">/</span>
+              {formatNumber(of.sf.quantite)}
             </span>
             <button
               type="button"
@@ -403,9 +403,11 @@ export const OfCard = memo(function OfCard({ of }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <MetricBox
               label="Durée Production (cumul)"
-              value={formatDureeMinutes(dureeStatutsCumulMinutes)}
+              // Cumul du seul statut "OF Débuté" : c'est le temps de production
+              // effectif, hors pauses, pannes et attentes.
+              value={formatDureeMinutes(of.dureeProductionEcouleeMinutes)}
               tone="cumul"
-              title="Σ des durées de tous les statuts de l'OF — correspond exactement à la somme des bandes colorées du timeline"
+              title="Σ des durées passées en statut « OF Débuté » — temps de production effectif, hors pauses, pannes et attentes"
             />
             <MetricBox
               label="Contrôles Qualité (cumul)"

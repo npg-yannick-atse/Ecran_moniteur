@@ -1760,21 +1760,41 @@ async function getDashboardImpl(
   const dureeProductionResteMinutes =
     dureeProductionResteEnCoursMinutes + dureeProductionResteALancerMinutes
 
-  // Breakdown dynamique par statut production — chaque statut distinct
-  // présent dans les OFs affichés génère une entrée avec son count.
+  // Breakdown par statut utilisateur. On part du RÉFÉRENTIEL complet
+  // (ref_user_status) et pas seulement des statuts présents sur la ligne :
+  // une tuile à 0 est une information — « aucun OF en panne » se lit d'un coup
+  // d'œil, alors qu'une tuile absente oblige à se demander si le statut existe.
+  const statusRef = await logQuery("ref_user_status", () =>
+    prisma.$queryRaw<
+      { designation: string; color: string | null }[]
+    >`
+      SELECT designation, color
+      FROM [dbo].[ref_user_status]
+      WHERE ISNULL(is_active, 0) = 1 AND ISNULL(vue_web, 0) = 1
+      ORDER BY designation
+    `
+  )
   const statusMap = new Map<string, { count: number; color: string }>()
+  for (const s of statusRef) {
+    statusMap.set(s.designation, { count: 0, color: s.color || "#9E9E9E" })
+  }
   for (const r of rows) {
     const label = r.statusUtilisateur_designation ?? "Inconnu"
-    const color = r.statusUtilisateur_color ?? "#9E9E9E"
     const entry = statusMap.get(label)
     if (entry) entry.count++
-    else statusMap.set(label, { count: 1, color })
+    // Statut porté par un OF mais absent du référentiel (désactivé depuis) :
+    // on l'ajoute quand même, sinon des OF disparaîtraient du décompte.
+    else
+      statusMap.set(label, {
+        count: 1,
+        color: r.statusUtilisateur_color ?? "#9E9E9E",
+      })
   }
   const statusCounts = Array.from(statusMap, ([label, { count, color }]) => ({
     label,
     count,
     color,
-  })).sort((a, b) => b.count - a.count)
+  })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "fr"))
 
   const kpis = {
     nbOfPF: ofRows.length,

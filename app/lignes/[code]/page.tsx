@@ -7,7 +7,6 @@ import { useParams } from "next/navigation"
 import { api } from "@/lib/api"
 import { Header } from "@/components/header"
 import { KpiBar, type KpiFilter } from "@/components/kpi-bar"
-import { TimelineLegend } from "@/components/timeline-legend"
 import { OfCard } from "@/components/of-card"
 
 export default function DashboardLignePage() {
@@ -95,7 +94,9 @@ export default function DashboardLignePage() {
             activeFilter={kpiFilter}
             onFilterChange={setKpiFilter}
           />
-          <TimelineLegend />
+          {/* Bandeau de légende masqué : il mangeait une bande de hauteur sur
+              chaque écran d'atelier. La légende reste accessible par OF, via le
+              bouton ⋮ de la carte. */}
           <main className="px-6 py-5">
             {/* Indicateur de filtre actif */}
             {kpiFilter !== "all" && (

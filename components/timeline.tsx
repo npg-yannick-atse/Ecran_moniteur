@@ -158,7 +158,7 @@ export function Timeline({ of }: Props) {
           {
             date: new Date(i.date).getTime(),
             y: INTERVENTION_Y,
-            rail: "Avis PF" as const,
+            rail: "DI PF" as const,
             label: `Avis ${i.avisNumber ?? i.id}`,
             color: i.arret ? "#dc2626" : (i.color ?? "#f97316"),
             code: `avis-${i.id}`,
@@ -172,7 +172,7 @@ export function Timeline({ of }: Props) {
           dots.push({
             date: new Date(i.clotureDate).getTime(),
             y: INTERVENTION_Y,
-            rail: "Avis PF" as const,
+            rail: "DI PF" as const,
             label: `Avis ${i.avisNumber ?? i.id} — Clôturé`,
             color: "#16a34a",
             code: `aviscloture-${i.id}`,
@@ -541,24 +541,24 @@ export function Timeline({ of }: Props) {
       >
         {hoveredBand && bandTipPos && (
           <div
-            className="pointer-events-none fixed z-[100] rounded-lg border border-slate-200 bg-white p-2 shadow-lg"
+            className="pointer-events-none fixed z-[100] max-w-sm rounded-lg border-2 border-slate-300 bg-white p-3 text-sm shadow-2xl"
             style={{
               left:
                 typeof window !== "undefined" &&
-                bandTipPos.x + 14 + 260 > window.innerWidth
-                  ? bandTipPos.x - 14 - 260
+                bandTipPos.x + 14 + 380 > window.innerWidth
+                  ? bandTipPos.x - 14 - 380
                   : bandTipPos.x + 14,
               top: bandTipPos.y + 14,
             }}
           >
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+            <div className="flex items-center gap-1.5 text-base font-bold text-slate-800">
               <span
                 className="h-2.5 w-2.5 rounded"
                 style={{ background: hoveredBand.color }}
               />
               <span>{hoveredBand.designation}</span>
             </div>
-            <div className="mt-1 space-y-0.5 text-[10px] text-slate-600">
+            <div className="mt-1.5 space-y-1 text-sm text-slate-600">
               <div>
                 <span className="font-semibold text-slate-500">Début :</span>{" "}
                 {format(new Date(hoveredBand.start), "dd/MM/yyyy HH:mm:ss", {
@@ -619,7 +619,7 @@ export function Timeline({ of }: Props) {
                 v === 7
                   ? "SF"
                   : v === 6
-                    ? "Avis PF"
+                    ? "DI PF"
                     : v === 5
                       ? "Contrôle Qualité PF"
                       : v === 4
@@ -845,26 +845,26 @@ function DotTooltip({ data: d, pos }: { data: any; pos: { x: number; y: number }
   const quality = d.qualityInfo
   const status = d.statusInfo
   // Flip à gauche si le tooltip dépasse le bord droit de la fenêtre.
-  const TOOLTIP_WIDTH = 260
+  const TOOLTIP_WIDTH = 380 // élargi : les tooltips sont lus de loin en atelier
   const flipLeft =
     typeof window !== "undefined" &&
     pos.x + 14 + TOOLTIP_WIDTH > window.innerWidth
   return (
     <div
-      className="pointer-events-none fixed z-[100] rounded-lg border border-slate-200 bg-white p-2 shadow-lg"
+      className="pointer-events-none fixed z-[100] max-w-sm rounded-lg border-2 border-slate-300 bg-white p-3 text-sm shadow-2xl"
       style={{
         left: flipLeft ? pos.x - 14 - TOOLTIP_WIDTH : pos.x + 14,
         top: pos.y + 14,
       }}
     >
-      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+      <div className="flex items-center gap-1.5 text-base font-bold text-slate-800">
         <span
           className="h-2.5 w-2.5 rounded-full"
           style={{ background: d.color }}
         />
         <span>{d.label}</span>
       </div>
-      <div className="mt-1 space-y-0.5 text-[10px] text-slate-600">
+      <div className="mt-1.5 space-y-1 text-sm text-slate-600">
         <div>
           <span className="font-semibold text-slate-500">Rail :</span> {d.rail}
         </div>
