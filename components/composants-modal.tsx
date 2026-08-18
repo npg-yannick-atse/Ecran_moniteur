@@ -5,14 +5,18 @@ import { useQuery } from "@tanstack/react-query"
 import { Loader2, X, CheckCircle2, Circle } from "lucide-react"
 import { api } from "@/lib/api"
 import { cn, formatNumber } from "@/lib/utils"
-import type { OfComposant } from "@/lib/types"
+import type { OfComposant, StatusBadge } from "@/lib/types"
+import { StatusPill } from "./status-pill"
 
 interface Props {
   ofCode: string
+  /** Statut logistique de l'OF — déplacé ici depuis l'entête : il porte sur la
+   *  réception des composants, c'est donc sa place naturelle. */
+  statusLogistique?: StatusBadge
   onClose: () => void
 }
 
-export function ComposantsModal({ ofCode, onClose }: Props) {
+export function ComposantsModal({ ofCode, statusLogistique, onClose }: Props) {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["composants", ofCode],
     queryFn: ({ signal }) => api.composants(ofCode, signal),
@@ -51,11 +55,16 @@ export function ComposantsModal({ ofCode, onClose }: Props) {
             <h2 className="text-lg font-bold text-wms-dark">
               Composants PF — OF {ofCode}
             </h2>
-            {data && (
-              <p className="mt-0.5 text-xs text-slate-600">
-                {nbPfRecep} / {pfItems.length} réceptionnés
-              </p>
-            )}
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {statusLogistique?.label && (
+                <StatusPill status={statusLogistique} prefix="Log" />
+              )}
+              {data && (
+                <span className="text-sm text-slate-600">
+                  {nbPfRecep} / {pfItems.length} réceptionnés
+                </span>
+              )}
+            </div>
           </div>
           <button
             type="button"

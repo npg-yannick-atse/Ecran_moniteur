@@ -33,6 +33,7 @@ export const TIMELINE_LEGEND_ITEMS: LegendItemDef[] = [
   { label: "Remplissage", bg: "#FF9800", icon: ICO(Droplets), group: "production" },
   { label: "Fardelage", bg: "#33a8bf", icon: ICO(Package), group: "production" },
   { label: "Livraison", bg: "#4CAF50", icon: ICO(Truck), group: "production" },
+  { label: "Livraison SF", bg: "#0891b2", icon: ICO(Truck), group: "production" },
   { label: "Confirmation SF", bg: "#1d4ed8", icon: ICO(Check), group: "production" },
   { label: "Confirmation SF finale", bg: "#1d4ed8", icon: ICO(Flag), group: "production" },
   // Réception

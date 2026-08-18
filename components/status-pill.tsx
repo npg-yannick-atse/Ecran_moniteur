@@ -14,9 +14,11 @@ interface Props {
   status: StatusBadge
   prefix?: string
   className?: string
+  /** Durée passée dans CE statut, affichée dans la pastille (ex. "5h 24min"). */
+  duree?: string
 }
 
-export function StatusPill({ status, prefix, className }: Props) {
+export function StatusPill({ status, prefix, className, duree }: Props) {
   // Pas de label utile (NULL côté DB) → on n'affiche rien plutôt que "—" / "En attente".
   if (!status.label || status.label === "—") return null
 
@@ -40,6 +42,14 @@ export function StatusPill({ status, prefix, className }: Props) {
     >
       {prefix && <span className="mr-1 opacity-75">{prefix}:</span>}
       {status.label}
+      {duree && (
+        <>
+          {/* Séparateur translucide : tient sur fond clair comme sur fond
+              sombre, contrairement à une couleur fixe. */}
+          <span className="mx-2 h-4 w-px bg-current opacity-30" />
+          <span className="tabular-nums opacity-90">{duree}</span>
+        </>
+      )}
     </span>
   )
 }

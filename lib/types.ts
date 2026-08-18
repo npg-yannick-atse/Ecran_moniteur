@@ -94,6 +94,8 @@ export interface StatusPeriod {
   end: string | null // ISO ; null = statut courant (jusqu'à maintenant)
   durationMin: number // durée en minutes (jusqu'à now si en cours)
   consoSegment: number | null // énergie consommée pendant CE statut = delta index compteur ; null si pas de relevé sur la fenêtre
+  createdBy: string | null // auteur du changement de statut
+  commentaire: string | null // motif saisi à la bascule, souvent vide
 }
 
 /**

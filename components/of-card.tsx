@@ -14,10 +14,12 @@ import { StatusPill } from "./status-pill"
 import { Timeline } from "./timeline"
 import { ComposantsModal } from "./composants-modal"
 import { SfModal } from "./sf-modal"
+import { StatusHistoryModal } from "./status-history-modal"
 import {
   AlertTriangle,
   Beaker,
   Boxes,
+  CalendarClock,
   Clock,
   Droplets,
   Gauge,
@@ -43,6 +45,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
   const [showComposants, setShowComposants] = useState(false)
   const [showSf, setShowSf] = useState(false)
   const [showLegend, setShowLegend] = useState(false)
+  const [showHistorique, setShowHistorique] = useState(false)
   const rempliPct =
     of.quantite > 0 ? Math.round((of.qteRempli / of.quantite) * 100) : 0
   // Ratios bruts (peuvent dépasser 100% — feedback user : afficher la vraie valeur)
@@ -164,29 +167,48 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <span className="opacity-70">kWh</span>
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <StatusPill status={of.statusUtilisateur} />
-          {dernierStatut && (
+          {of.dateFinOrdo && (
             <span
-              className="inline-flex select-none items-center gap-1 rounded-full border px-3 py-1 text-sm font-bold tabular-nums"
-              style={{
-                borderColor: `${dernierStatut.color}80`,
-                backgroundColor: `${dernierStatut.color}1a`,
-                // La couleur brute en texte serait illisible sur fond clair
-                // pour les statuts vifs → on l'assombrit jusqu'au lisible.
-                color: darkenForText(dernierStatut.color),
-              }}
-              title={`Durée dans le statut « ${dernierStatut.designation} » — depuis le ${formatDateTimeFr(dernierStatut.start)}`}
+              className={cn(
+                BADGE_BASE,
+                "border-amber-300 bg-amber-50 text-amber-700"
+              )}
+              title={
+                of.dateFinOrdoAvecHeure
+                  ? "Date de fin d'ordonnancement SAP"
+                  : "Date de fin d'ordonnancement SAP — ordonnancé à la journée, aucune heure fournie"
+              }
             >
-              <Clock className="h-3.5 w-3.5" />
-              {/* formatDureeMinutes bascule en "6j 11h 56min" au-delà de 24 h ;
-                  en dessous il reste en heures/minutes. */}
-              {formatDureeMinutes(dernierStatut.durationMin)}
+              <CalendarClock className="h-3.5 w-3.5" />
+              <span className="opacity-70">Fin ordo</span>
+              {of.dateFinOrdoAvecHeure
+                ? formatDateTimeFr(of.dateFinOrdo)
+                : formatDateFr(of.dateFinOrdo)}
             </span>
           )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {/* La durée est DANS la pastille : c'est la durée de CE statut, la
+              séparer en deux badges laissait croire à deux informations
+              indépendantes. Clic → historique complet. */}
+          <button
+            type="button"
+            onClick={() => setShowHistorique(true)}
+            title="Voir l'historique des statuts de l'OF"
+            className="rounded-full transition-transform hover:scale-105"
+          >
+            <StatusPill
+              status={of.statusUtilisateur}
+              duree={
+                dernierStatut
+                  ? formatDureeMinutes(dernierStatut.durationMin)
+                  : undefined
+              }
+            />
+          </button>
           <StatusPill status={of.statusProduction} prefix="Prod" />
-          <StatusPill status={of.statusLogistique} prefix="Log" />
+          {/* Statut logistique retiré d'ici : il porte sur la réception des
+              composants, il est donc à sa place dans le modal composants. */}
           {of.retard && (
             <span className="flex animate-blink items-center gap-1 rounded bg-rose-500 px-3 py-1 text-[10px] font-bold text-white">
               <AlertTriangle className="h-3 w-3" />
@@ -270,14 +292,16 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               "flex items-center gap-3 rounded-lg border px-3 py-2",
               sfAlerte
                 ? "border-orange-400 bg-orange-50"
-                : "border-wms-light bg-wms-bg"
+                // Ton gris par défaut : le SF est une information de contexte,
+                // le bleu wms le mettait au même niveau que les données PF.
+                : "border-slate-300 bg-slate-100"
             )}
             title={sfAlerte ? sfAlerteRaison : undefined}
           >
             <span
               className={cn(
                 "rounded px-2 py-0.5 text-[9px] font-bold text-white",
-                sfAlerte ? "bg-orange-500" : "bg-wms-light"
+                sfAlerte ? "bg-orange-500" : "bg-slate-500"
               )}
             >
               SF
@@ -285,7 +309,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             <span
               className={cn(
                 "font-mono text-xs font-semibold",
-                sfAlerte ? "text-orange-700" : "text-wms-light"
+                sfAlerte ? "text-orange-700" : "text-slate-600"
               )}
             >
               {formatOf(of.sf.of)}
@@ -294,7 +318,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <div
                 className={cn(
                   "h-2.5 flex-1 overflow-hidden rounded-full",
-                  sfAlerte ? "bg-orange-200" : "bg-wms-lighter"
+                  sfAlerte ? "bg-orange-200" : "bg-slate-300"
                 )}
               >
                 <div
@@ -315,7 +339,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <span
                 className={cn(
                   "min-w-[40px] text-right text-xs font-bold",
-                  sfAlerte ? "text-orange-700" : "text-wms"
+                  sfAlerte ? "text-orange-700" : "text-slate-600"
                 )}
               >
                 {sfPct}%
@@ -409,28 +433,14 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               tone="cumul"
               title="Σ des durées passées en statut « OF Débuté » — temps de production effectif, hors pauses, pannes et attentes"
             />
+            {/* Contrôles rapportés au temps de production : « 3 contrôles »
+                seul ne dit rien, 3 contrôles en 2 h ou en 3 jours n'ont pas le
+                même sens. Le dénominateur est le cumul en statut Débuté. */}
             <MetricBox
-              label="Contrôles Qualité (cumul)"
-              value={`${of.qualityEvents.length} contrôle${of.qualityEvents.length > 1 ? "s" : ""}`}
+              label="Contrôles Qualité / Durée Prod"
+              value={`${of.qualityEvents.length} / ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)}`}
               tone="qualite"
-              title="Nombre total de contrôles qualité enregistrés sur cet OF"
-            />
-            <MetricBox
-              label="Date Fin Ordonnancement"
-              // SAP n'ordonnance qu'à la journée (heure_fin_ordonnancement NULL
-              // sur tous les OF) : afficher une heure ferait croire à une
-              // précision qui n'existe pas.
-              value={
-                of.dateFinOrdoAvecHeure
-                  ? formatDateTimeFr(of.dateFinOrdo)
-                  : formatDateFr(of.dateFinOrdo)
-              }
-              tone="demande"
-              title={
-                of.dateFinOrdoAvecHeure
-                  ? undefined
-                  : "SAP ordonnance à la journée : aucune heure de fin n'est fournie"
-              }
+              title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective (statut OF Débuté)`}
             />
             <MetricBox
               label="Date Demande Composant"
@@ -472,8 +482,13 @@ export const OfCard = memo(function OfCard({ of }: Props) {
       {showComposants && (
         <ComposantsModal
           ofCode={of.of}
+          statusLogistique={of.statusLogistique}
           onClose={() => setShowComposants(false)}
         />
+      )}
+
+      {showHistorique && (
+        <StatusHistoryModal of={of} onClose={() => setShowHistorique(false)} />
       )}
 
       {showSf && <SfModal of={of} onClose={() => setShowSf(false)} />}

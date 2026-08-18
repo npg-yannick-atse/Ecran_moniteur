@@ -737,6 +737,7 @@ function getLucideIcon(
   if (code.startsWith("remp-") || code === "remplissage") return Droplets
   if (code.startsWith("poly-") || code === "polypackage") return Package
   if (code.startsWith("livr-") || code === "livraison") return Truck
+  if (code.startsWith("sflivr-")) return Truck // livraison du vrac SF vers la ligne
   if (code === "log-7" || code === "log-8") return PackageCheck // Réception Partielle + Receptionnés
   if (code === "util-6") return Lock // Cloturé
   if (code.startsWith("quality-")) return FlaskConical // Contrôle qualité

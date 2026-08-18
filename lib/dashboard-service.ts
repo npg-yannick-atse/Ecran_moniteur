@@ -570,6 +570,7 @@ async function getDashboardImpl(
     status_color: string | null
     type_status: string
     created_by: string | null
+    commentaire: string | null
   }
   const pfIds = rows.map((r) => r.id_of)
   const sfIds = rows
@@ -611,13 +612,30 @@ async function getDashboardImpl(
               status_designation,
               status_color,
               type_status,
-              created_by
+              created_by,
+              commentaire
             FROM [dbo].[v_historique_status_of]
             WHERE id_of IN (${Prisma.join(allIds)})
             ORDER BY date_changement ASC
           `
         )
       : []
+
+  // v_historique_status_of.created_by stocke un ID utilisateur ("24"), pas un
+  // nom. On le résout via auth_user pour afficher "adolphe.adomon" dans
+  // l'historique des statuts. Table courte (quelques dizaines de lignes),
+  // chargée d'un coup plutôt que jointe sur la vue d'historique.
+  const utilisateurs = await logQuery("auth_user", () =>
+    prisma.$queryRaw<{ id: number; username: string | null }[]>`
+      SELECT id, username FROM [dbo].[auth_user]
+    `
+  )
+  const nomParUserId = new Map(
+    utilisateurs.map((u) => [String(u.id), u.username ?? String(u.id)])
+  )
+  /** Nom d'utilisateur si created_by est un ID connu, valeur brute sinon. */
+  const resoudreAuteur = (v: string | null): string | null =>
+    v == null ? null : (nomParUserId.get(v.trim()) ?? v)
 
   const eventsByOfId = new Map<number, EventRow[]>()
   for (const e of events) {
@@ -833,7 +851,10 @@ async function getDashboardImpl(
               polypackage_date, qte_polypackage,
               livraison_date, qte_livraison
             FROM [dbo].[fiche_cheminement]
-            WHERE id_of_FK IN (${Prisma.join(pfIds)})
+            -- allIds et non pfIds : les fiches du SF servent à tracer ses
+            -- livraisons sur le rail SF du timeline. Les compteurs PF lisent
+            -- la map par id_of du PF, ces lignes en plus ne les touchent pas.
+            WHERE id_of_FK IN (${Prisma.join(allIds)})
               AND (remplissage_date IS NOT NULL
                 OR polypackage_date IS NOT NULL
                 OR livraison_date IS NOT NULL)
@@ -1271,6 +1292,27 @@ async function getDashboardImpl(
         palette: null,
       })
     }
+    // Livraisons du SF — le semi-fini a ses propres fiches de cheminement.
+    // Chaque livraison = un lot de vrac descendu vers la ligne de conditionnement,
+    // donc le maillon qui manquait entre la fabrication du SF et le remplissage.
+    for (const f of r.sf_id_of != null
+      ? (fichesByOfId.get(r.sf_id_of) ?? [])
+      : []) {
+      if (!f.livraison_date) continue
+      timelineEvents.push({
+        date: f.livraison_date.toISOString(),
+        type: "production",
+        category: "SF",
+        rail: "SF",
+        code: `sflivr-${f.id_fiche}`,
+        label: `Livraison SF — Palette N°${f.indice ?? "?"}`,
+        color: "#0891b2", // cyan foncé : famille SF, distinct du bleu des confirmations
+        qte: f.qte_livraison ?? null,
+        qteCarton: null,
+        palette: f.indice ?? null,
+      })
+    }
+
     // Fin réelle du SF = dernière confirmation marquée finale. Sert de repère
     // pour savoir si le SF était prêt avant que le PF ne démarre (cf. of-card).
     const dateFinProductionSF =
@@ -1359,6 +1401,8 @@ async function getDashboardImpl(
         end: end?.toISOString() ?? null,
         durationMin,
         consoSegment,
+        createdBy: resoudreAuteur(e.created_by),
+        commentaire: e.commentaire?.trim() || null,
       }
     })
 
