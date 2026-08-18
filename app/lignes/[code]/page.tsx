@@ -34,14 +34,16 @@ export default function DashboardLignePage() {
   return (
     <div className="min-h-screen">
       <Header
-        title={
+        // Nom de la ligne en haut, code en dessous : c'est le nom que les
+        // opérateurs emploient, le code sert à lever l'ambiguïté.
+        title={data?.ligne?.designation || data?.ligne?.code || code}
+        subtitle={
           data?.ligne
-            ? data.ligne.section.nom
-              ? `${data.ligne.code} - ${data.ligne.section.nom}`
-              : data.ligne.code
-            : code
+            ? [data.ligne.code, data.ligne.section.nom]
+                .filter(Boolean)
+                .join(" · ")
+            : "Chargement…"
         }
-        subtitle={data?.ligne ? `${data.ligne.designation}` : "Chargement…"}
         backHref="/"
       />
 

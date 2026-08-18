@@ -41,9 +41,9 @@ export function Header({ title, subtitle, backHref, rightSlot }: HeaderProps) {
           <Factory className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-lg font-bold leading-tight">{title}</h1>
+          <h1 className="text-xl font-bold uppercase leading-tight">{title}</h1>
           {subtitle && (
-            <p className="text-[11px] text-wms-lighter">{subtitle}</p>
+            <p className="font-mono text-sm text-wms-lighter">{subtitle}</p>
           )}
         </div>
       </div>

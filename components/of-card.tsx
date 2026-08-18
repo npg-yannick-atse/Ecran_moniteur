@@ -20,6 +20,7 @@ import {
   Beaker,
   Boxes,
   CalendarClock,
+  CircleCheck,
   Clock,
   Droplets,
   Gauge,
@@ -93,6 +94,21 @@ export const OfCard = memo(function OfCard({ of }: Props) {
       : sfFinTs != null
         ? "SF terminé après le démarrage du PF"
         : "PF démarré alors que le SF n'est pas terminé"
+
+  // ---- Étape « finale » --------------------------------------------------
+  // Une étape est finie quand TOUTES les palettes de l'OF y sont passées, et
+  // non quand la quantité théorique est atteinte. Vérifié sur les données :
+  //   OF 1136104 : 667/670 CRN mais 17/17 palettes → fini (dernière incomplète)
+  //   OF 1134921 : 581/500 CRN mais  8/10 palettes → 2 palettes restent !
+  // Le critère quantité se trompe dans les deux sens ; les palettes sont
+  // l'unité de travail réelle. Repli sur la quantité quand le nombre de
+  // palettes n'est qu'estimé (fiches pas encore créées).
+  const etapeFinale = (palettesEtape: number, karEtape: number): boolean => {
+    if (of.quantitePalettes > 0 && !of.quantitePalettesEstimee) {
+      return palettesEtape >= of.quantitePalettes
+    }
+    return of.quantite > 0 && karEtape >= of.quantite
+  }
 
   // Dernière période de statut = statut courant de l'OF. Sa durée court
   // jusqu'à maintenant (calculée côté API, rafraîchie à chaque poll).
@@ -395,6 +411,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pieces={of.qteRempliPieces}
               totalPieces={of.qteRempliTotalPieces}
               palettes={of.qteRempliPalettes}
+              finale={etapeFinale(of.qteRempliPalettes, of.qteRempli)}
             />
             <QteBox
               label="Qté Fardelée"
@@ -405,6 +422,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pieces={of.qtePolypackeePieces}
               totalPieces={of.qtePolypackeeTotalPieces}
               palettes={of.qtePolypackeePalettes}
+              finale={etapeFinale(of.qtePolypackeePalettes, of.qtePolypackee)}
             />
             <QteBox
               label="Qté Livrée"
@@ -414,6 +432,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pieces={of.qteLivreePieces}
               totalPieces={of.qteLivreeTotalPieces}
               palettes={of.qteLivreePalettes}
+              finale={etapeFinale(of.qteLivreePalettes, of.qteLivree)}
             />
           </div>
 
@@ -595,6 +614,7 @@ function QteBox({
   pieces,
   totalPieces,
   palettes,
+  finale,
 }: {
   label: string
   badge?: string | null
@@ -604,6 +624,8 @@ function QteBox({
   pieces: number
   totalPieces: number
   palettes: number
+  /** Toutes les palettes de l'OF sont passées par cette étape */
+  finale?: boolean
 }) {
   const empty = palettes === 0 && totalPieces === 0 && kar === 0
   const t = QTE_TONES[tone]
@@ -622,6 +644,13 @@ function QteBox({
           <span className="ml-auto shrink-0 rounded bg-white/70 px-1 text-[10px] font-bold tabular-nums">
             {badge}
           </span>
+        )}
+        {/* Étape terminée : rond vert coché, aligné à droite de l'entête. */}
+        {finale && (
+          <CircleCheck
+            className={cn("h-5 w-5 shrink-0 text-emerald-600", !badge && "ml-auto")}
+            aria-label="Étape terminée"
+          />
         )}
       </div>
 
