@@ -372,9 +372,9 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             )}
             {/* Quantité SF agrandie : c'est le chiffre que l'on cherche de
                 loin sur la ligne, il était en 10px. */}
-            <span className="whitespace-nowrap text-base font-bold tabular-nums text-slate-700">
+            <span className="whitespace-nowrap text-2xl font-extrabold leading-none tabular-nums text-slate-800">
               {formatNumber(of.sf.qteFabriquee)}
-              <span className="mx-1 font-normal text-slate-400">/</span>
+              <span className="mx-1 text-lg font-normal text-slate-400">/</span>
               {formatNumber(of.sf.quantite)}
             </span>
             <button
@@ -382,15 +382,26 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               onClick={() => setShowSf(true)}
               disabled={!of.sf.of}
               className={cn(
-                "flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-bold transition-colors",
-                of.sf.of
-                  ? "border-wms-light bg-white text-wms hover:bg-wms hover:text-white"
-                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
+                !of.sf.of
+                  ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+                  : of.sf.nbTotalComposants === 0
+                    ? "border-slate-300 bg-white text-slate-500 hover:bg-slate-50"
+                    : of.sf.nbComposantsReceptionnes >= of.sf.nbTotalComposants
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      : of.sf.nbComposantsReceptionnes === 0
+                        ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                        : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
               )}
-              title={of.sf.of ? "Voir les détails du SF" : "Aucun SF associé"}
+              title={
+                of.sf.of
+                  ? "Composants du SF réceptionnés — cliquer pour le détail"
+                  : "Aucun SF associé"
+              }
             >
-              <InfoIcon className="h-3 w-3" />
-              Détails
+              <InfoIcon className="h-3.5 w-3.5" />
+              {of.sf.nbComposantsReceptionnes} / {of.sf.nbTotalComposants}
+              <span className="font-semibold opacity-70">composants</span>
             </button>
           </div>
 
@@ -702,11 +713,11 @@ function TimelineLegendPopover({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 shadow-xl">
-        <div className="mb-2 border-b border-slate-100 pb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600">
+      <div className="absolute right-0 top-full z-50 mt-1 max-h-[70vh] w-96 overflow-auto rounded-lg border-2 border-slate-300 bg-white p-4 shadow-2xl">
+        <div className="mb-3 border-b border-slate-200 pb-2 text-sm font-bold uppercase tracking-wide text-slate-700">
           Légende timeline
         </div>
-        <ul className="space-y-1.5">
+        <ul className="space-y-2.5">
           {TIMELINE_LEGEND_ITEMS.map((it) => (
             <li key={it.label}>
               <LegendChip item={it} />

@@ -25,7 +25,7 @@ export interface LegendItemDef {
 }
 
 const ICO = (C: React.ComponentType<{ className?: string }>) => (
-  <C className="h-3.5 w-3.5 text-white" />
+  <C className="h-4 w-4 text-white" />
 )
 
 export const TIMELINE_LEGEND_ITEMS: LegendItemDef[] = [
@@ -73,14 +73,14 @@ export function TimelineLegend() {
 
 export function LegendChip({ item }: { item: LegendItemDef }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       <span
-        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold leading-none text-white shadow-sm"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold leading-none text-white shadow-sm"
         style={{ background: item.bg }}
       >
         {item.icon}
       </span>
-      <span className="text-[10px] text-slate-700">{item.label}</span>
+      <span className="text-sm text-slate-700">{item.label}</span>
     </div>
   )
 }

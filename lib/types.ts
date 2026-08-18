@@ -57,6 +57,10 @@ export interface SfInfo {
   statusUtil: StatusBadge
   estimation: string | null // ISO datetime
   dureeReelleMinutes: number | null
+  /** Composants du SF réceptionnés (of_item.id_status_FK = 8) */
+  nbComposantsReceptionnes: number
+  /** Total des composants du SF, hors composants spéciaux masqués */
+  nbTotalComposants: number
   dateDemandeComposant: string | null // ISO — 1er event id_status_FK=2 sur le SF (repère amont)
   dateDebutProduction: string | null // ISO — 1er event OFDE sur le SF = début réel de la fab
   /** ISO — dernière confirmation FINALE (prod_operation_confirmation.is_final) = fin réelle du SF */

@@ -691,23 +691,40 @@ async function getDashboardImpl(
     nb_items: number
     nb_receptionnes: number
   }
+  // allIds et non pfIds : le badge du bloc SF affiche aussi son compte de
+  // composants réceptionnés. Les composants "spéciaux" (ref_special_component)
+  // sont exclus UNIQUEMENT côté SF, pour que le badge annonce exactement le
+  // nombre de lignes que le modal SF affichera.
+  const exclusionSpeciauxSF =
+    sfIds.length > 0
+      ? Prisma.sql`
+          AND NOT (
+            oi.id_of_FK IN (${Prisma.join(sfIds)})
+            AND EXISTS (
+              SELECT 1 FROM [dbo].[ref_special_component] rsc
+              WHERE rsc.article_code = oi.code_article
+                AND ISNULL(rsc.is_deleted, 0) = 0
+            )
+          )`
+      : Prisma.empty
   const composants =
-    pfIds.length > 0
+    allIds.length > 0
       ? await logQuery(
-          `composants of_item (${pfIds.length} OFs)`,
-          // Le SF (of_item.type_article='ZHAL') est EXCLU du total composant :
-          // il est déjà représenté par sa propre card SF et sa barre dédiée,
-          // donc pas besoin de le compter 2 fois.
+          `composants of_item (${allIds.length} OFs)`,
+          // Le SF (of_item.type_article='ZHAL') est EXCLU du total composant du
+          // PF : il est déjà représenté par sa propre card SF et sa barre
+          // dédiée, donc pas besoin de le compter 2 fois.
           () => prisma.$queryRaw<ComposantsRow[]>`
             SELECT
               oi.id_of_FK,
               COUNT(*) AS nb_items,
               SUM(CASE WHEN oi.id_status_FK = 8 THEN 1 ELSE 0 END) AS nb_receptionnes
             FROM [dbo].[of_item] oi
-            WHERE oi.id_of_FK IN (${Prisma.join(pfIds)})
+            WHERE oi.id_of_FK IN (${Prisma.join(allIds)})
               AND ISNULL(oi.annuler, 0) = 0
               AND oi.type_article <> 'ZHAL'
               AND oi.code_article NOT IN ('5PDCEAU', '5PDCBRONIDOX', 'SPDCBRONIDOX')
+              ${exclusionSpeciauxSF}
             GROUP BY oi.id_of_FK
           `
         )
@@ -1618,6 +1635,14 @@ async function getDashboardImpl(
             r.sf_heure_fin_ordonnancement
           )?.toISOString() ?? null,
         dureeReelleMinutes: null,
+        nbComposantsReceptionnes:
+          r.sf_id_of != null
+            ? (composantsByOfId.get(r.sf_id_of)?.nb_receptionnes ?? 0)
+            : 0,
+        nbTotalComposants:
+          r.sf_id_of != null
+            ? (composantsByOfId.get(r.sf_id_of)?.nb_items ?? 0)
+            : 0,
         dateDemandeComposant: dateDemandeComposantSF?.toISOString() ?? null,
         dateDebutProduction: dateDebutProductionSF?.toISOString() ?? null,
         dateFinProduction: dateFinProductionSF?.toISOString() ?? null,
