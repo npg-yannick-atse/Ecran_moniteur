@@ -1037,7 +1037,6 @@ async function getDashboardImpl(
     id_of_FK: number
     echantillon: number | null
     poids: number | null
-    quantite_valide: number | null
     nombre_echantillon: number | null
     created_by: string | null
     createdAt: Date
@@ -1048,7 +1047,7 @@ async function getDashboardImpl(
           `quality inspections (${pfIds.length} OFs)`,
           () => prisma.$queryRaw<QualityRow[]>`
             SELECT id_enteteResultatInspect, id_of_FK, echantillon, poids,
-                   quantite_valide, nombre_echantillon, created_by, createdAt
+                   nombre_echantillon, created_by, createdAt
             FROM [dbo].[entete_resultat_inspect]
             WHERE id_of_FK IN (${Prisma.join(pfIds)})
             ORDER BY createdAt ASC
@@ -1685,7 +1684,6 @@ async function getDashboardImpl(
         date: q.createdAt.toISOString(),
         echantillon: q.echantillon,
         poids: q.poids,
-        quantiteValide: q.quantite_valide,
         nombreEchantillon: q.nombre_echantillon,
         createdBy: q.created_by,
       })),

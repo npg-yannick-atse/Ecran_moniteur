@@ -250,7 +250,6 @@ export interface QualityEvent {
   date: string // ISO — createdAt
   echantillon: number | null
   poids: number | null
-  quantiteValide: number | null
   nombreEchantillon: number | null
   createdBy: string | null
 }

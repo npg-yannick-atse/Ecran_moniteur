@@ -898,12 +898,6 @@ function DotTooltip({ data: d, pos }: { data: any; pos: { x: number; y: number }
                 {quality.poids}
               </div>
             )}
-            {quality.quantiteValide != null && (
-              <div>
-                <span className="font-semibold text-slate-500">Qté validée :</span>{" "}
-                {quality.quantiteValide}
-              </div>
-            )}
             {quality.nombreEchantillon != null && (
               <div>
                 <span className="font-semibold text-slate-500">N° contrôle :</span>{" "}
