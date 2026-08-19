@@ -713,11 +713,11 @@ function TimelineLegendPopover({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="absolute right-0 top-full z-50 mt-1 max-h-[70vh] w-96 overflow-auto rounded-lg border-2 border-slate-300 bg-white p-4 shadow-2xl">
-        <div className="mb-3 border-b border-slate-200 pb-2 text-sm font-bold uppercase tracking-wide text-slate-700">
+      <div className="absolute right-0 top-full z-50 mt-1 max-h-[80vh] w-[34rem] overflow-auto rounded-xl border-2 border-slate-300 bg-white p-5 shadow-2xl">
+        <div className="mb-4 border-b-2 border-slate-200 pb-3 text-lg font-bold uppercase tracking-wide text-slate-800">
           Légende timeline
         </div>
-        <ul className="space-y-2.5">
+        <ul className="space-y-3">
           {TIMELINE_LEGEND_ITEMS.map((it) => (
             <li key={it.label}>
               <LegendChip item={it} />
