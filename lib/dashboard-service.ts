@@ -1282,7 +1282,9 @@ async function getDashboardImpl(
         rail: "SF",
         // double-coche réservée à la confirmation finale ; simple coche sinon
         code: c.is_final ? `sfconf-final-${c.id}` : `sfconf-${c.id}`,
-        label: `${c.operation_name ?? "Confirmation"}${c.work_center_name ? ` — ${c.work_center_name}` : ""}${c.is_final ? " (finale)" : ""}`,
+        // Libellé métier plutôt que le nom d'opération de la gamme
+        // ("FAIRE DU MELANGE"…), qui ne parlait pas côté conditionnement.
+        label: `Confirmation SF${c.is_final ? " (finale)" : ""}`,
         color: "#1d4ed8", // bleu foncé, dédié au SF
         qte: c.quantity ?? null,
         qteCarton: null,
