@@ -54,6 +54,19 @@ const CHART_MARGIN_BOTTOM = 50
 const XAXIS_HEIGHT = 50
 const RAIL_LABEL_WIDTH = 104
 
+/**
+ * Position verticale d'un rail, en pixels depuis le haut du graphique.
+ *
+ * Reproduit le calcul de Recharts : la zone de tracé va de `margin.top` à
+ * `hauteur − margin.bottom − hauteur de l'axe X`, et l'échelle est linéaire
+ * sur le domaine [0, Y_MAX]. Les constantes ci-dessus étant les mêmes que
+ * celles passées au graphique, les libellés tombent sur les rails.
+ */
+const PLOT_HEIGHT =
+  CHART_HEIGHT - CHART_MARGIN_TOP - CHART_MARGIN_BOTTOM - XAXIS_HEIGHT
+const railY = (v: number) =>
+  CHART_MARGIN_TOP + PLOT_HEIGHT * (1 - v / Y_MAX)
+
 /** Libellé du rail affiché sur l'axe Y, partagé par les deux graphiques. */
 const railLabel = (v: number): string =>
   v === 7
@@ -560,41 +573,21 @@ export function Timeline({ of }: Props) {
           L'alignement tient parce que les deux partagent hauteur, marges
           verticales et hauteur d'axe X : Recharts en déduit la même échelle. */}
       <div className="flex">
+        {/* Libellés en HTML et non via un second graphique Recharts : privé de
+            série de données, celui-ci ne dessinait pas son axe. */}
         <div
-          className="shrink-0 select-none [&_*]:outline-none"
-          style={{ width: RAIL_LABEL_WIDTH }}
-          aria-hidden="true"
+          className="relative shrink-0 select-none border-r border-slate-200 bg-slate-50"
+          style={{ width: RAIL_LABEL_WIDTH, height: CHART_HEIGHT }}
         >
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <LineChart
-              margin={{
-                top: CHART_MARGIN_TOP,
-                right: 0,
-                left: 0,
-                bottom: CHART_MARGIN_BOTTOM,
-              }}
+          {[1, 2, 3, 4, 5, 6, 7].map((v) => (
+            <span
+              key={v}
+              className="absolute right-2 -translate-y-1/2 text-right text-[10px] font-bold leading-tight text-slate-700"
+              style={{ top: railY(v) }}
             >
-              <YAxis
-                type="number"
-                domain={[0, Y_MAX]}
-                ticks={[1, 2, 3, 4, 5, 6, 7]}
-                tickFormatter={railLabel}
-                tick={{ fontSize: 10, fontWeight: 700, fill: "#334155" }}
-                width={RAIL_LABEL_WIDTH - 4}
-                stroke="#94a3b8"
-              />
-              {/* Axe X invisible : il ne sert qu'à réserver la même hauteur en
-                  bas que dans le graphique défilant. */}
-              <XAxis
-                dataKey="date"
-                type="number"
-                domain={[rangeStart, rangeEnd]}
-                tick={false}
-                axisLine={false}
-                height={XAXIS_HEIGHT}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+              {railLabel(v)}
+            </span>
+          ))}
         </div>
       <div
         className={cn(
