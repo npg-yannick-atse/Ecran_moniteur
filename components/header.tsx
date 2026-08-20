@@ -4,15 +4,24 @@ import { useEffect, useState } from "react"
 import { Factory } from "lucide-react"
 import Link from "next/link"
 import { FullscreenButton } from "./fullscreen-button"
+import { cn } from "@/lib/utils"
 
 interface HeaderProps {
   title: string
   subtitle?: string
   backHref?: string
   rightSlot?: React.ReactNode
+  /** Ligne en panne ou à l'arrêt : tout l'entête passe en rouge. */
+  alerte?: boolean
 }
 
-export function Header({ title, subtitle, backHref, rightSlot }: HeaderProps) {
+export function Header({
+  title,
+  subtitle,
+  backHref,
+  rightSlot,
+  alerte,
+}: HeaderProps) {
   const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
@@ -23,9 +32,16 @@ export function Header({ title, subtitle, backHref, rightSlot }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-50 flex items-center justify-between border-b-[3px] border-wms px-6 py-3 text-white shadow-md"
+      className={cn(
+        "flex items-center justify-between border-b-[3px] px-6 py-3 text-white shadow-md",
+        alerte ? "animate-blink border-rose-900" : "border-wms"
+      )}
       style={{
-        background: "linear-gradient(135deg, #004f5e, #006d82)",
+        // Rouge sur toute la barre : un bandeau d'alerte séparé se perdait
+        // dans la page, l'entête est ce que l'on voit de loin en atelier.
+        background: alerte
+          ? "linear-gradient(135deg, #7f1d1d, #b91c1c)"
+          : "linear-gradient(135deg, #004f5e, #006d82)",
       }}
     >
       <div className="flex items-center gap-3">

@@ -76,7 +76,7 @@ function Tile({
         >
           {display}
         </div>
-        <div className="text-[10px] uppercase tracking-wide text-slate-500">
+        <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">
           {label}
         </div>
       </div>
@@ -202,18 +202,8 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
         />
       ))}
       {/* Compteurs transverses (pas des statuts utilisateur) */}
-      <Tile
-        count={kpis.nbOfDemande}
-        label="OF demandés"
-        color="#d97706"
-        title="OF pour lesquels une demande de composant a été émise"
-      />
-      <Tile
-        count={kpis.nbOfNonDebute}
-        label="OF non débutés"
-        color="#dc2626"
-        title="OF sans aucun événement OF Débuté : la production n'a jamais commencé"
-      />
+      {/* Tuiles « OF demandés » et « OF non débutés » retirées à la demande.
+          Les compteurs restent calculés côté API. */}
       <Tile
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
         label="Prod. restante"

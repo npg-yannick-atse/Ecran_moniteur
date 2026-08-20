@@ -31,8 +31,18 @@ export default function DashboardLignePage() {
       : data.ofs
   }, [data, kpiFilter])
 
+  // Ligne en alerte : avis d'arrêt ouvert, ou au moins un OF en panne
+  // technique. Le statut n'a plus de tuile dans la barre KPI — c'est l'entête
+  // qui porte le signal, visible de loin depuis l'atelier.
+  const ligneEnAlerte =
+    !!data?.ligneEnArret ||
+    !!data?.ofs.some((of) => of.statusUtilisateur.label === "Panne technique")
+
   return (
     <div className="min-h-screen">
+      {/* Entête et barre de statuts figés ensemble : en descendant dans la
+          liste des OF, on garde sous les yeux la ligne et son état. */}
+      <div className="sticky top-0 z-40 shadow-md">
       <Header
         // Nom de la ligne en haut, code en dessous : c'est le nom que les
         // opérateurs emploient, le code sert à lever l'ambiguïté.
@@ -45,7 +55,16 @@ export default function DashboardLignePage() {
             : "Chargement…"
         }
         backHref="/"
+        alerte={ligneEnAlerte}
       />
+      {data && (
+        <KpiBar
+          kpis={data.kpis}
+          activeFilter={kpiFilter}
+          onFilterChange={setKpiFilter}
+        />
+      )}
+      </div>
 
       {isLoading && !data && (
         <div className="flex items-center justify-center py-20">
@@ -91,11 +110,6 @@ export default function DashboardLignePage() {
               </div>
             </div>
           )}
-          <KpiBar
-            kpis={data.kpis}
-            activeFilter={kpiFilter}
-            onFilterChange={setKpiFilter}
-          />
           {/* Bandeau de légende masqué : il mangeait une bande de hauteur sur
               chaque écran d'atelier. La légende reste accessible par OF, via le
               bouton ⋮ de la carte. */}

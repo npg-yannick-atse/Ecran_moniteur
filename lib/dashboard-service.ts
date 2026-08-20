@@ -1835,12 +1835,23 @@ async function getDashboardImpl(
       ORDER BY designation
     `
   )
+  // Statuts volontairement absents de la barre : soit ils n'apportent rien au
+  // pilotage de la ligne, soit ils sont déjà signalés autrement — la panne
+  // technique fait passer l'entête de la ligne en rouge.
+  const STATUTS_MASQUES = new Set([
+    "OF Débuté/En cours",
+    "Changement production",
+    "Panne technique",
+    "Problème qualité composant",
+  ])
   const statusMap = new Map<string, { count: number; color: string }>()
   for (const s of statusRef) {
+    if (STATUTS_MASQUES.has(s.designation)) continue
     statusMap.set(s.designation, { count: 0, color: s.color || "#9E9E9E" })
   }
   for (const r of rows) {
     const label = r.statusUtilisateur_designation ?? "Inconnu"
+    if (STATUTS_MASQUES.has(label)) continue
     const entry = statusMap.get(label)
     if (entry) entry.count++
     // Statut porté par un OF mais absent du référentiel (désactivé depuis) :
