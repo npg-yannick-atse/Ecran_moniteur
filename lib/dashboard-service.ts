@@ -763,29 +763,10 @@ async function getDashboardImpl(
     ])
   )
 
-  // Durée RÉELLE de production = Σ duree_production des events OHSU où le
-  // statut utilisateur est OFDE ("OF Débuté/En cours", id=2). Les autres
-  // statuts (OFVA validation, PPR pause, CHG changement, PTE panne…) stockent
-  // aussi une durée mais ne comptent pas comme du temps de production effectif.
-  type DureeRow = { id_of_FK: number; duree_ofde: number | null }
-  const dureesProd =
-    pfIds.length > 0
-      ? await logQuery(
-          `OFDE duree_production (${pfIds.length} OFs)`,
-          () => prisma.$queryRaw<DureeRow[]>`
-            SELECT
-              id_of_FK,
-              SUM(ISNULL(duree_production, 0)) AS duree_ofde
-            FROM [dbo].[Of_has_statusUtilisateurs]
-            WHERE id_of_FK IN (${Prisma.join(pfIds)})
-              AND id_statusUtilisateur_FK = 2
-            GROUP BY id_of_FK
-          `
-        )
-      : []
-  const dureeOfdeByOfId = new Map(
-    dureesProd.map((d) => [d.id_of_FK, Number(d.duree_ofde ?? 0)])
-  )
+  // (La durée de production était calculée ici depuis
+  // Of_has_statusUtilisateurs.duree_production. Requête supprimée : cette
+  // colonne porte la durée du statut PRÉCÉDENT, elle donnait un résultat faux.
+  // Le calcul se fait désormais à partir des périodes de statusHistoryPF.)
 
   // Dernière entrée of_has_demand par OF (dates demande livraison / système)
   type DemandRow = {
@@ -1529,7 +1510,18 @@ async function getDashboardImpl(
     //   dureeReste = rate × reste
     // dureeEcoulee = Σ duree_production OHSU filtré sur OFDE uniquement
     // (les autres statuts = validation, pause, panne… ne sont pas du temps prod).
-    const dureeEcoulee = dureeOfdeByOfId.get(r.id_of) ?? 0
+    // Durée de production = Σ des périodes passées en "OF Débuté" (util-2),
+    // calculée depuis statusHistoryPF.
+    //
+    // NE PAS utiliser Of_has_statusUtilisateurs.duree_production : cette
+    // colonne porte la durée du statut PRÉCÉDENT, pas celle de sa propre
+    // ligne. Vérifié sur l'OF 1136674 : la ligne "OF Débuté" porte 36, qui est
+    // la durée du "Changement production" qui la précède. Sommer sur
+    // id_statusUtilisateur_FK = 2 donnait donc la durée des changements et des
+    // pauses — 76 min au lieu des 628 min réellement produites.
+    const dureeEcoulee = statusHistoryPF
+      .filter((p) => p.code === "util-2")
+      .reduce((somme, p) => somme + p.durationMin, 0)
     const qteTheorique = r.qte_of ?? 0
     const resteQte = Math.max(0, qteTheorique - qteRempli)
     const dureeResteMinutes =
