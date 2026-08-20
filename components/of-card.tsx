@@ -108,6 +108,19 @@ export const OfCard = memo(function OfCard({ of }: Props) {
     return of.quantite > 0 && karEtape >= of.quantite
   }
 
+  // Temps écoulé depuis le démarrage RÉEL de la production (1er event OFDE),
+  // pauses et arrêts compris. À comparer à "Durée Production (cumul)" qui, lui,
+  // ne compte que le temps effectivement produit : l'écart entre les deux est
+  // le temps perdu.
+  const ecouleDepuisDebutMinutes = of.dateDebutProduction
+    ? Math.max(
+        0,
+        Math.round(
+          (Date.now() - new Date(of.dateDebutProduction).getTime()) / 60_000
+        )
+      )
+    : null
+
   // Dernière période de statut = statut courant de l'OF. Sa durée court
   // jusqu'à maintenant (calculée côté API, rafraîchie à chaque poll).
   // NB : statusHistoryPF exclut "OF Validé", donc ce statut peut différer de
@@ -447,6 +460,16 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               value={formatDureeMinutes(of.dureeProductionEcouleeMinutes)}
               tone="cumul"
               title="Σ des durées passées en statut « OF Débuté » — temps de production effectif, hors pauses, pannes et attentes"
+            />
+            <MetricBox
+              label="Écoulé depuis Date Début"
+              value={formatDureeMinutes(ecouleDepuisDebutMinutes)}
+              tone="ordo"
+              title={
+                of.dateDebutProduction
+                  ? `Production démarrée le ${formatDateTimeFr(of.dateDebutProduction)} — temps écoulé depuis, pauses et arrêts compris`
+                  : "L'OF n'a pas encore démarré"
+              }
             />
             {/* Contrôles rapportés au temps de production : « 3 contrôles »
                 seul ne dit rien, 3 contrôles en 2 h ou en 3 jours n'ont pas le
