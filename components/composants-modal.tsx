@@ -134,17 +134,14 @@ export function ComposantsSection({
                 <th className="px-3 py-2">Désignation</th>
                 <th className="px-3 py-2 text-right">Qté requise</th>
                 <th className="px-3 py-2 text-right">Reçue</th>
+                {/* Ordre : du plus proche de la ligne au plus lointain
+                    (conditionnement → zone tampon → magasin), puis les deux
+                    colonnes « en attente ». */}
                 <th
                   className="px-3 py-2 text-right"
-                  title="Pas encore arrivé sur la ligne (requise − réceptionnée)"
+                  title="Reste au conditionnement, prêt à consommer (of_item.qte_restant_cnd)"
                 >
-                  Reste magasin
-                </th>
-                <th
-                  className="px-3 py-2 text-right"
-                  title="Pas encore servi par le magasin (requise − préparée)"
-                >
-                  En attente magasin
+                  Reste cond.
                 </th>
                 <th
                   className="px-3 py-2 text-right"
@@ -154,11 +151,22 @@ export function ComposantsSection({
                 </th>
                 <th
                   className="px-3 py-2 text-right"
+                  title="Pas encore arrivé sur la ligne (requise − réceptionnée)"
+                >
+                  Reste magasin
+                </th>
+                <th
+                  className="px-3 py-2 text-right"
                   title="Servi par le magasin mais pas encore entré en zone tampon (préparée − réceptionnée)"
                 >
                   En attente zone
                 </th>
-                <th className="px-3 py-2 text-right">Reste conditionnement</th>
+                <th
+                  className="px-3 py-2 text-right"
+                  title="Pas encore servi par le magasin (requise − préparée)"
+                >
+                  En attente magasin
+                </th>
                 <th className="px-3 py-2">Statut</th>
               </tr>
             </thead>
@@ -210,14 +218,14 @@ export function ComposantsSection({
                       ? formatNumber(c.qteReceptionnee)
                       : "—"}
                   </td>
-                  <ResteCell value={c.resteMagasin} emplacement={c.magasin} />
-                  <ResteCell value={c.enAttenteMagasin} />
+                  <ResteCell value={c.resteConditionnement} />
                   <ResteCell
                     value={c.resteZoneTampon}
                     emplacement={c.zoneTampon}
                   />
+                  <ResteCell value={c.resteMagasin} emplacement={c.magasin} />
                   <ResteCell value={c.enAttenteZone} />
-                  <ResteCell value={c.resteConditionnement} />
+                  <ResteCell value={c.enAttenteMagasin} />
                   <td className="px-3 py-2">
                     {c.status.label ? (
                       <span

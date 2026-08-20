@@ -14,6 +14,7 @@ import { StatusPill } from "./status-pill"
 import { Timeline } from "./timeline"
 import { ComposantsModal } from "./composants-modal"
 import { StatusHistoryModal } from "./status-history-modal"
+import { QualiteModal } from "./qualite-modal"
 import {
   AlertTriangle,
   Beaker,
@@ -46,6 +47,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
   const [showComposants, setShowComposants] = useState(false)
   const [showLegend, setShowLegend] = useState(false)
   const [showHistorique, setShowHistorique] = useState(false)
+  const [showQualite, setShowQualite] = useState(false)
   const rempliPct =
     of.quantite > 0 ? Math.round((of.qteRempli / of.quantite) * 100) : 0
   // Ratios bruts (peuvent dépasser 100% — feedback user : afficher la vraie valeur)
@@ -571,7 +573,8 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               label="Contrôles Qualité / Durée Prod"
               value={`${of.qualityEvents.length} / ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)}`}
               tone="qualite"
-              title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective (statut OF Débuté)`}
+              title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective — cliquer pour le détail`}
+              onClick={() => setShowQualite(true)}
             />
             {/* Ce que l'OF entier coûtera en temps machine au rythme constaté,
                 à opposer à la cadence théorique de la gamme. */}
@@ -627,6 +630,10 @@ export const OfCard = memo(function OfCard({ of }: Props) {
 
       {showHistorique && (
         <StatusHistoryModal of={of} onClose={() => setShowHistorique(false)} />
+      )}
+
+      {showQualite && (
+        <QualiteModal of={of} onClose={() => setShowQualite(false)} />
       )}
 
     </div>
@@ -841,11 +848,14 @@ function MetricBox({
   value,
   tone,
   title,
+  onClick,
 }: {
   label: string
   value: string
   tone: "ordo" | "demande" | "cumul" | "qualite" | "cadence"
   title?: string
+  /** Rend la carte cliquable — elle devient alors un vrai <button>. */
+  onClick?: () => void
 }) {
   const cls =
     tone === "ordo"
@@ -857,12 +867,32 @@ function MetricBox({
         : tone === "qualite"
           ? "border-violet-200 bg-violet-50 text-violet-700"
           : "border-amber-200 bg-amber-50 text-amber-700"
-  return (
-    <div className={cn("rounded-lg border px-3 py-2", cls)} title={title}>
+  const contenu = (
+    <>
       <div className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
         {label}
       </div>
       <div className="mt-1 text-base font-bold">{value}</div>
+    </>
+  )
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        className={cn(
+          "rounded-lg border px-3 py-2 text-left transition-transform hover:scale-[1.02] hover:shadow-md",
+          cls
+        )}
+      >
+        {contenu}
+      </button>
+    )
+  }
+  return (
+    <div className={cn("rounded-lg border px-3 py-2", cls)} title={title}>
+      {contenu}
     </div>
   )
 }
