@@ -27,6 +27,7 @@ import {
   MoreVertical,
   Package as PackageIcon,
   Truck,
+  TrendingUp,
 } from "lucide-react"
 import { TIMELINE_LEGEND_ITEMS, LegendChip } from "./timeline-legend"
 
@@ -107,6 +108,34 @@ export const OfCard = memo(function OfCard({ of }: Props) {
     }
     return of.quantite > 0 && karEtape >= of.quantite
   }
+
+  // ---- Cadence réellement tenue ------------------------------------------
+  // pièces effectivement remplies ÷ temps effectivement produit (statut OF
+  // Débuté). À comparer à la cadence théorique de la gamme : le rapport des
+  // deux est le rendement de la ligne sur cet OF.
+  const cadenceReelle =
+    of.dureeProductionEcouleeMinutes != null &&
+    of.dureeProductionEcouleeMinutes > 0 &&
+    of.qteRempliTotalPieces > 0
+      ? of.qteRempliTotalPieces / of.dureeProductionEcouleeMinutes
+      : null
+  const rendementPct =
+    cadenceReelle != null && of.cadencePiecesParMinute
+      ? Math.round((cadenceReelle / of.cadencePiecesParMinute) * 100)
+      : null
+  // Durée de production que représente TOUT l'OF au rythme constaté, et ce
+  // qu'il en reste. Null pour les articles au poids (pas de quantité en pièces).
+  const dureeTotaleCadenceReelle =
+    cadenceReelle != null && of.quantiteTotalPieces != null
+      ? Math.round(of.quantiteTotalPieces / cadenceReelle)
+      : null
+  const resteCadenceReelle =
+    cadenceReelle != null && of.quantiteTotalPieces != null
+      ? Math.round(
+          Math.max(0, of.quantiteTotalPieces - of.qteRempliTotalPieces) /
+            cadenceReelle
+        )
+      : null
 
   // Temps écoulé depuis le démarrage RÉEL de la production (1er event OFDE),
   // pauses et arrêts compris. À comparer à "Durée Production (cumul)" qui, lui,
@@ -285,6 +314,31 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <Gauge className="h-3.5 w-3.5" />
               {formatNumber(of.cadencePiecesParMinute)}
               <span className="opacity-70">pcs/min</span>
+            </span>
+          )}
+          {cadenceReelle != null && (
+            <span
+              className={cn(
+                BADGE_BASE,
+                rendementPct == null
+                  ? "border-slate-300 bg-slate-50 text-slate-700"
+                  : rendementPct >= 85
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    : rendementPct >= 60
+                      ? "border-amber-300 bg-amber-50 text-amber-700"
+                      : "border-rose-300 bg-rose-50 text-rose-700"
+              )}
+              title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence théorique de ${of.cadencePiecesParMinute} pcs/min` : ""}`}
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              {cadenceReelle.toLocaleString("fr-FR", {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+              <span className="opacity-70">pcs/min réelle</span>
+              {rendementPct != null && (
+                <span className="ml-0.5 opacity-90">({rendementPct}%)</span>
+              )}
             </span>
           )}
           {of.nbTotalComposants > 0 && (
@@ -479,6 +533,18 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               value={`${of.qualityEvents.length} / ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)}`}
               tone="qualite"
               title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective (statut OF Débuté)`}
+            />
+            {/* Ce que l'OF entier coûtera en temps machine au rythme constaté,
+                à opposer à la cadence théorique de la gamme. */}
+            <MetricBox
+              label="Durée Prod. à cadence réelle"
+              value={formatDureeMinutes(dureeTotaleCadenceReelle)}
+              tone="cadence"
+              title={
+                dureeTotaleCadenceReelle != null
+                  ? `Durée de production de tout l'OF au rythme constaté (${cadenceReelle!.toFixed(1)} pcs/min) — il en reste ${formatDureeMinutes(resteCadenceReelle)}`
+                  : "Cadence réelle non calculable : production pas encore démarrée, ou article au poids"
+              }
             />
           </div>
 
@@ -739,7 +805,7 @@ function MetricBox({
 }: {
   label: string
   value: string
-  tone: "ordo" | "demande" | "cumul" | "qualite"
+  tone: "ordo" | "demande" | "cumul" | "qualite" | "cadence"
   title?: string
 }) {
   const cls =
@@ -747,6 +813,8 @@ function MetricBox({
       ? "border-wms-light bg-wms-bg text-wms"
       : tone === "cumul"
         ? "border-slate-300 bg-slate-100 text-slate-700"
+        : tone === "cadence"
+        ? "border-sky-200 bg-sky-50 text-sky-700"
         : tone === "qualite"
           ? "border-violet-200 bg-violet-50 text-violet-700"
           : "border-amber-200 bg-amber-50 text-amber-700"
