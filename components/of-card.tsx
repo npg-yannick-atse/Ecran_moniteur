@@ -13,7 +13,6 @@ import type { OfRow } from "@/lib/types"
 import { StatusPill } from "./status-pill"
 import { Timeline } from "./timeline"
 import { ComposantsModal } from "./composants-modal"
-import { SfModal } from "./sf-modal"
 import { StatusHistoryModal } from "./status-history-modal"
 import {
   AlertTriangle,
@@ -44,7 +43,6 @@ const BADGE_BASE =
 
 export const OfCard = memo(function OfCard({ of }: Props) {
   const [showComposants, setShowComposants] = useState(false)
-  const [showSf, setShowSf] = useState(false)
   const [showLegend, setShowLegend] = useState(false)
   const [showHistorique, setShowHistorique] = useState(false)
   const rempliPct =
@@ -222,7 +220,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               }
             />
           </button>
-          <StatusPill status={of.statusProduction} prefix="Prod" />
           {/* Statut logistique retiré d'ici : il porte sur la réception des
               composants, il est donc à sa place dans le modal composants. */}
           {of.retard && (
@@ -377,32 +374,20 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <span className="mx-1 text-lg font-normal text-slate-400">/</span>
               {formatNumber(of.sf.quantite)}
             </span>
-            <button
-              type="button"
-              onClick={() => setShowSf(true)}
-              disabled={!of.sf.of}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-bold tabular-nums transition-colors",
-                !of.sf.of
-                  ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                  : of.sf.nbTotalComposants === 0
-                    ? "border-slate-300 bg-white text-slate-500 hover:bg-slate-50"
-                    : of.sf.nbComposantsReceptionnes >= of.sf.nbTotalComposants
-                      ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                      : of.sf.nbComposantsReceptionnes === 0
-                        ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
-                        : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-              )}
+            {/* Information seule, non cliquable : le détail des composants du
+                SF n'est pas consultable depuis ici. */}
+            <span
+              className="flex select-none items-center gap-1.5 rounded-md border border-slate-300 bg-slate-100 px-2.5 py-1.5 text-sm font-bold tabular-nums text-slate-500"
               title={
                 of.sf.of
-                  ? "Composants du SF réceptionnés — cliquer pour le détail"
+                  ? "Composants du SF réceptionnés sur le total"
                   : "Aucun SF associé"
               }
             >
               <InfoIcon className="h-3.5 w-3.5" />
               {of.sf.nbComposantsReceptionnes} / {of.sf.nbTotalComposants}
               <span className="font-semibold opacity-70">composants</span>
-            </button>
+            </span>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
@@ -472,11 +457,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               tone="qualite"
               title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective (statut OF Débuté)`}
             />
-            <MetricBox
-              label="Date Demande Composant"
-              value={formatDateTimeFr(of.dateDemandeComposant)}
-              tone="demande"
-            />
           </div>
 
           {/* Barres de progression en cascade : TH → Rempli → Polypack → Livré */}
@@ -521,7 +501,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
         <StatusHistoryModal of={of} onClose={() => setShowHistorique(false)} />
       )}
 
-      {showSf && <SfModal of={of} onClose={() => setShowSf(false)} />}
     </div>
   )
 })
