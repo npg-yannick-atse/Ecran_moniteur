@@ -48,6 +48,30 @@ const RAIL_Y: Record<TimelineEvent["rail"], number> = {
   Fardelage: 3,
   Livraison: 2,
 }
+const CHART_HEIGHT = 560
+const CHART_MARGIN_TOP = 40
+const CHART_MARGIN_BOTTOM = 50
+const XAXIS_HEIGHT = 50
+const RAIL_LABEL_WIDTH = 104
+
+/** Libellé du rail affiché sur l'axe Y, partagé par les deux graphiques. */
+const railLabel = (v: number): string =>
+  v === 7
+    ? "SF"
+    : v === 6
+      ? "DI PF"
+      : v === 5
+        ? "Contrôle Qualité PF"
+        : v === 4
+          ? "Remplissage"
+          : v === 3
+            ? "Fardelage"
+            : v === 2
+              ? "Livraison"
+              : v === 1
+                ? "Statut PF"
+                : ""
+
 const STATUS_BAND_Y = 1
 const QUALITY_Y = 5
 const INTERVENTION_Y = 6
@@ -528,10 +552,53 @@ export function Timeline({ of }: Props) {
         )}
       </div>
 
-      {/* ===== CHART ===== */}
+      {/* ===== CHART =====
+          Deux graphiques côte à côte : une colonne figée qui ne porte que
+          l'axe Y (les noms de rails), et le graphique lui-même qui défile.
+          Sans ça, zoomer faisait sortir les noms de rails de l'écran et on ne
+          savait plus quelle ligne on regardait.
+          L'alignement tient parce que les deux partagent hauteur, marges
+          verticales et hauteur d'axe X : Recharts en déduit la même échelle. */}
+      <div className="flex">
+        <div
+          className="shrink-0 select-none [&_*]:outline-none"
+          style={{ width: RAIL_LABEL_WIDTH }}
+          aria-hidden="true"
+        >
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <LineChart
+              margin={{
+                top: CHART_MARGIN_TOP,
+                right: 0,
+                left: 0,
+                bottom: CHART_MARGIN_BOTTOM,
+              }}
+            >
+              <YAxis
+                type="number"
+                domain={[0, Y_MAX]}
+                ticks={[1, 2, 3, 4, 5, 6, 7]}
+                tickFormatter={railLabel}
+                tick={{ fontSize: 10, fontWeight: 700, fill: "#334155" }}
+                width={RAIL_LABEL_WIDTH - 4}
+                stroke="#94a3b8"
+              />
+              {/* Axe X invisible : il ne sert qu'à réserver la même hauteur en
+                  bas que dans le graphique défilant. */}
+              <XAxis
+                dataKey="date"
+                type="number"
+                domain={[rangeStart, rangeEnd]}
+                tick={false}
+                axisLine={false}
+                height={XAXIS_HEIGHT}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       <div
         className={cn(
-          "relative select-none overflow-y-hidden [&_*]:outline-none [&_*]:focus:outline-none",
+          "relative min-w-0 flex-1 select-none overflow-y-hidden [&_*]:outline-none [&_*]:focus:outline-none",
           shiftMode ? "overflow-x-hidden" : "overflow-x-auto"
         )}
         onMouseLeave={() => {
@@ -588,8 +655,15 @@ export function Timeline({ of }: Props) {
         {hoveredDot && dotTipPos && (
           <DotTooltip data={hoveredDot} pos={dotTipPos} />
         )}
-        <ResponsiveContainer width={`${containerWidth}%`} height={560}>
-          <LineChart margin={{ top: 40, right: 20, left: 0, bottom: 50 }}>
+        <ResponsiveContainer width={`${containerWidth}%`} height={CHART_HEIGHT}>
+          <LineChart
+            margin={{
+              top: CHART_MARGIN_TOP,
+              right: 20,
+              left: 0,
+              bottom: CHART_MARGIN_BOTTOM,
+            }}
+          >
             <CartesianGrid
               horizontal={true}
               vertical={false}
@@ -608,34 +682,13 @@ export function Timeline({ of }: Props) {
                 angle: -45,
                 textAnchor: "end",
               }}
-              height={50}
+              height={XAXIS_HEIGHT}
               stroke="#64748b"
             />
-            <YAxis
-              type="number"
-              domain={[0, Y_MAX]}
-              ticks={[1, 2, 3, 4, 5, 6, 7]}
-              tickFormatter={(v) =>
-                v === 7
-                  ? "SF"
-                  : v === 6
-                    ? "DI PF"
-                    : v === 5
-                      ? "Contrôle Qualité PF"
-                      : v === 4
-                        ? "Remplissage"
-                        : v === 3
-                          ? "Fardelage"
-                          : v === 2
-                            ? "Livraison"
-                            : v === 1
-                              ? "Statut PF"
-                              : ""
-              }
-              tick={{ fontSize: 10, fontWeight: 700, fill: "#334155" }}
-              width={100}
-              stroke="#94a3b8"
-            />
+            {/* hide : l'axe conserve son rôle d'échelle mais ne dessine ni
+                libellé ni ligne, et ne réserve aucune largeur. Les noms de
+                rails sont dans la colonne figée à gauche. */}
+            <YAxis type="number" domain={[0, Y_MAX]} hide />
 
             {markers.map((m, i) => (
               <ReferenceLine
@@ -722,6 +775,7 @@ export function Timeline({ of }: Props) {
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
       </div>
     </div>
   )
