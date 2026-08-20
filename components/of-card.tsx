@@ -378,9 +378,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 maximumFractionDigits: 1,
               })}
               <span className="opacity-70">pcs/min réelle</span>
-              {rendementPct != null && (
-                <span className="ml-0.5 opacity-90">({rendementPct}%)</span>
-              )}
             </span>
           )}
           {of.nbTotalComposants > 0 && (
