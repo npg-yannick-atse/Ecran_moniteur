@@ -116,8 +116,17 @@ export function Timeline({ of }: Props) {
     ]
       .filter(Boolean)
       .map((d) => new Date(d!).getTime())
+    // Un statut encore ouvert court jusqu'à maintenant : sans ce repère, la
+    // fenêtre s'arrête au dernier événement et la bande du statut courant est
+    // tronquée — un OF bloqué depuis 20 jours paraissait bloqué depuis 1 jour.
+    const statutEnCours = of.statusHistoryPF.some((p) => p.end == null)
     const mins = [...eventTs, ...anchors]
-    const maxs = [...eventTs, ...statusEnds, ...anchors]
+    const maxs = [
+      ...eventTs,
+      ...statusEnds,
+      ...anchors,
+      ...(statutEnCours ? [Date.now()] : []),
+    ]
     const s = mins.length ? Math.min(...mins) : Date.now() - 86_400_000
     const e = maxs.length ? Math.max(...maxs) : Date.now()
     const pad = Math.max((e - s) * 0.03, 10 * 60_000)
@@ -149,11 +158,23 @@ export function Timeline({ of }: Props) {
     ].sort((a, b) => a - b)
     const recent = allTs.slice(-10)
     if (recent.length >= 2) {
+      // Marge calculée sur l'amplitude du CLUSTER, pas sur l'écart jusqu'à
+      // maintenant : sinon un OF à l'arrêt depuis 3 semaines se verrait
+      // ajouter 10 jours de vide à droite.
       const span = recent[recent.length - 1] - recent[0]
       const pad = Math.max(span * 0.35, 60 * 60 * 1000)
+      const finCluster = recent[recent.length - 1] + pad
+      // Tant qu'un statut court, la fenêtre va jusqu'à maintenant — c'est ce
+      // qui rend le marqueur "Maintenant" visible et donne à la bande du
+      // statut courant sa vraie longueur. Au plus 2 h de vide après lui.
+      const statutEnCours = of.statusHistoryPF.some((p) => p.end == null)
+      const finMaintenant =
+        Date.now() + Math.min(pad, 2 * 60 * 60 * 1000)
       return {
         shiftStart: recent[0] - pad,
-        shiftEnd: recent[recent.length - 1] + pad,
+        shiftEnd: statutEnCours
+          ? Math.max(finCluster, finMaintenant)
+          : finCluster,
       }
     }
     return {
