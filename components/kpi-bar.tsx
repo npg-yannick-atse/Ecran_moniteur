@@ -60,13 +60,16 @@ function Tile({
   return (
     <div
       className={cn(
-        "flex min-w-[9rem] flex-1 items-center gap-3 rounded-lg px-4 py-2",
+        // Largeur fixe, sans flex-1 : sinon 4 tuiles sur une ligne prennent un
+        // quart d'écran chacune. Elles se rangent maintenant de gauche à
+        // droite et la ligne s'arrête où elle doit.
+        "flex w-48 shrink-0 items-center gap-3 rounded-lg px-4 py-2",
         vide ? "bg-slate-50 opacity-60" : "bg-slate-100"
       )}
       title={title}
     >
-      <div className="h-10 w-1 rounded-sm" style={{ background: color }} />
-      <div className="text-left">
+      <div className="h-10 w-1 shrink-0 rounded-sm" style={{ background: color }} />
+      <div className="min-w-0 text-left">
         <div
           className={cn(
             "font-bold tabular-nums",
