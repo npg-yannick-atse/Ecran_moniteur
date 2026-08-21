@@ -487,9 +487,11 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             {/* Quantité SF agrandie : c'est le chiffre que l'on cherche de
                 loin sur la ligne, il était en 10px. */}
             <span className="whitespace-nowrap text-2xl font-extrabold leading-none tabular-nums text-slate-800">
-              {formatNumber(of.sf.qteFabriquee)}
+              {formatNumber(Math.round(of.sf.qteFabriquee))}
               <span className="mx-1 text-lg font-normal text-slate-400">/</span>
-              {formatNumber(of.sf.quantite)}
+              {of.sf.quantite != null
+                ? formatNumber(Math.round(of.sf.quantite))
+                : "--"}
             </span>
             {/* Information seule, non cliquable : le détail des composants du
                 SF n'est pas consultable depuis ici. */}
@@ -553,7 +555,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               Placées juste sous les cartes quantité qu'elles résument, plutôt
               qu'en bas de colonne : elles se lisent avec elles, et l'espace
               vide qui traînait au milieu disparaît. */}
-          <div className="space-y-2">
+          <div className="mt-2 space-y-2.5">
             <ProgressBar
               label="Qté Remplie / Quantité TH"
               numerator={of.qteRempli}
