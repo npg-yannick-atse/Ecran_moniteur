@@ -54,8 +54,11 @@ function Tile({
   // les statuts clairs (ex. "Manque de composant" #d9e838) sont illisibles sur
   // le fond slate-100.
   const textColor = darkenForText(color)
-  // Une tuile à 0 reste affichée mais s'efface visuellement : l'information
-  // « aucun OF dans ce statut » doit être lisible sans capter l'attention.
+  // Une tuile à 0 reste affichée mais s'efface visuellement.
+  //
+  // L'estompage porte sur le CHIFFRE et le liseré, jamais sur le libellé :
+  // une opacité posée sur toute la tuile délavait aussi le nom du statut, qui
+  // devenait illisible alors que c'est justement ce qu'on cherche à lire.
   const vide = (count ?? 0) === 0 && !value
   return (
     <div
@@ -64,22 +67,25 @@ function Tile({
         // quart d'écran chacune. Elles se rangent maintenant de gauche à
         // droite et la ligne s'arrête où elle doit.
         "flex w-48 shrink-0 items-center gap-3 rounded-lg px-4 py-2",
-        vide ? "bg-slate-50 opacity-60" : "bg-slate-100"
+        vide ? "bg-slate-50" : "bg-slate-100"
       )}
       title={title}
     >
-      <div className="h-10 w-1 shrink-0 rounded-sm" style={{ background: color }} />
+      <div
+        className={cn("h-10 w-1 shrink-0 rounded-sm", vide && "opacity-40")}
+        style={{ background: color }}
+      />
       <div className="min-w-0 text-left">
         <div
           className={cn(
             "font-bold tabular-nums",
             display.length > 7 ? "text-lg" : "text-2xl"
           )}
-          style={{ color: textColor }}
+          style={{ color: vide ? "#94a3b8" : textColor }}
         >
           {display}
         </div>
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">
+        <div className="text-xs font-bold uppercase leading-tight tracking-wide text-slate-900">
           {label}
         </div>
       </div>
