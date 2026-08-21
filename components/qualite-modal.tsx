@@ -87,33 +87,52 @@ export function QualiteModal({ of, onClose }: Props) {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full min-w-[560px] text-left text-sm">
+              <table className="w-full min-w-[880px] text-left text-sm">
                 <thead className="bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-700">
                   <tr>
-                    <th className="px-4 py-2 text-right">N° contrôle</th>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2 text-right">Échantillon</th>
-                    <th className="px-4 py-2 text-right">Poids</th>
-                    <th className="px-4 py-2">Contrôleur</th>
+                    <th className="px-3 py-2 text-right">ID</th>
+                    <th className="px-3 py-2">Lot contrôle</th>
+                    <th className="px-3 py-2 text-right">N° Échantillon</th>
+                    <th className="px-3 py-2 text-right">Nombre d'échantillon</th>
+                    <th className="px-3 py-2 text-right">Poids</th>
+                    <th className="px-3 py-2">Effectué Par</th>
+                    <th className="px-3 py-2">Modifié Par</th>
+                    <th className="px-3 py-2">Effectué Le</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {controles.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-2 text-right font-bold tabular-nums text-violet-700">
-                        {c.nombreEchantillon ?? "—"}
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-400">
+                        {c.id}
                       </td>
-                      <td className="px-4 py-2 tabular-nums text-slate-700">
-                        {dateComplete(c.date)}
+                      <td className="px-3 py-2 font-mono tabular-nums text-slate-700">
+                        {c.lotControle || "—"}
                       </td>
-                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">
                         {c.echantillon ?? "—"}
                       </td>
-                      <td className="px-4 py-2 text-right font-semibold tabular-nums text-slate-800">
+                      <td className="px-3 py-2 text-right font-bold tabular-nums text-violet-700">
+                        {c.nombreEchantillon ?? "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-800">
                         {c.poids ?? "—"}
                       </td>
-                      <td className="px-4 py-2 text-slate-600">
+                      <td className="px-3 py-2 text-slate-600">
                         {c.createdBy || "—"}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-slate-600"
+                        title={
+                          c.modifiePar
+                            ? `Modifié le ${dateComplete(c.modifieLe ?? c.date)}`
+                            : undefined
+                        }
+                      >
+                        {c.modifiePar || "—"}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-700">
+                        {dateComplete(c.date)}
                       </td>
                     </tr>
                   ))}

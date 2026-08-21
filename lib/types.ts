@@ -248,10 +248,19 @@ export interface OfRow {
 export interface QualityEvent {
   id: number
   date: string // ISO — createdAt
+  /** entete_resultat_inspect.inspectLot — lot d'inspection SAP */
+  lotControle: string | null
   echantillon: number | null
   poids: number | null
   nombreEchantillon: number | null
   createdBy: string | null
+  /**
+   * Auteur d'une modification du contrôle. Absent de la vue compat : lu dans
+   * qc_inspection_result_header.updated_by, résolu via auth_user. null tant
+   * que le contrôle n'a pas été modifié.
+   */
+  modifiePar: string | null
+  modifieLe: string | null // ISO
 }
 
 export interface ArretInfo {

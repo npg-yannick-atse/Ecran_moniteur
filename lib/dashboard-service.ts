@@ -1016,22 +1016,34 @@ async function getDashboardImpl(
   type QualityRow = {
     id_enteteResultatInspect: number
     id_of_FK: number
+    inspectLot: string | null
     echantillon: number | null
     poids: number | null
     nombre_echantillon: number | null
     created_by: string | null
+    modifie_par: string | null
     createdAt: Date
+    updatedAt: Date | null
   }
   const qualityRows =
     pfIds.length > 0
       ? await logQuery(
           `quality inspections (${pfIds.length} OFs)`,
           () => prisma.$queryRaw<QualityRow[]>`
-            SELECT id_enteteResultatInspect, id_of_FK, echantillon, poids,
-                   nombre_echantillon, created_by, createdAt
-            FROM [dbo].[entete_resultat_inspect]
-            WHERE id_of_FK IN (${Prisma.join(pfIds)})
-            ORDER BY createdAt ASC
+            SELECT e.id_enteteResultatInspect, e.id_of_FK, e.inspectLot,
+                   e.echantillon, e.poids, e.nombre_echantillon,
+                   e.created_by, e.createdAt, e.updatedAt,
+                   u.username AS modifie_par
+            FROM [dbo].[entete_resultat_inspect] e
+            -- L'auteur d'une MODIFICATION n'existe que dans la table V2 : la
+            -- vue compat n'expose que created_by. updated_by y est un id
+            -- utilisateur, résolu via auth_user. Renseigné sur 26 lignes
+            -- seulement — exactement celles qui ont été modifiées.
+            LEFT JOIN [dbo].[qc_inspection_result_header] h
+              ON h.id = e.id_enteteResultatInspect
+            LEFT JOIN [dbo].[auth_user] u ON u.id = h.updated_by
+            WHERE e.id_of_FK IN (${Prisma.join(pfIds)})
+            ORDER BY e.createdAt ASC
           `
         )
       : []
@@ -1676,10 +1688,13 @@ async function getDashboardImpl(
       qualityEvents: (qualityByOfId.get(r.id_of) ?? []).map((q) => ({
         id: q.id_enteteResultatInspect,
         date: q.createdAt.toISOString(),
+        lotControle: q.inspectLot,
         echantillon: q.echantillon,
         poids: q.poids,
         nombreEchantillon: q.nombre_echantillon,
         createdBy: q.created_by,
+        modifiePar: q.modifie_par,
+        modifieLe: q.updatedAt?.toISOString() ?? null,
       })),
 
       bcDatesPF: (bcDatesByOfId.get(r.id_of) ?? []).map((d) => d.toISOString()),
