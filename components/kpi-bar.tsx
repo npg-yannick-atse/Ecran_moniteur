@@ -110,11 +110,23 @@ function formatKpiWithTotal(
   }
 }
 
+/**
+ * Statuts remontés sur la seconde ligne, aux côtés des indicateurs de charge.
+ * Ce sont les états d'attente : ce qui est prêt à partir, ou volontairement
+ * suspendu. Ils sont retirés de la première ligne pour ne pas figurer 2 fois.
+ */
+const STATUTS_LIGNE_2 = ["OF Validé", "Pause production Planifiée"]
+
 export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
+  const parStatut = new Map(kpis.statusCounts.map((s) => [s.label, s]))
+  const statutsLigne1 = kpis.statusCounts.filter(
+    (s) => !STATUTS_LIGNE_2.includes(s.label)
+  )
   // flex-wrap : le référentiel complet fait une quinzaine de tuiles, elles ne
   // tiennent plus sur une seule ligne comme avant.
   return (
-    <div className="flex flex-wrap gap-3 border-b border-slate-200 bg-white px-6 py-4">
+    <div className="border-b border-slate-200 bg-white px-6 py-4">
+    <div className="flex flex-wrap gap-3">
       {ITEMS.map((item) => {
         const value = kpis[item.key] as number
         const total = item.totalKey ? (kpis[item.totalKey] as number) : null
@@ -192,8 +204,8 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           </Fragment>
         )
       })}
-      {/* Breakdown dynamique par statut utilisateur */}
-      {kpis.statusCounts.map((sc) => (
+      {/* Ligne 1 : les statuts de production proprement dits */}
+      {statutsLigne1.map((sc) => (
         <Tile
           key={sc.label}
           count={sc.count}
@@ -201,9 +213,28 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           color={sc.color}
         />
       ))}
-      {/* Compteurs transverses (pas des statuts utilisateur) */}
-      {/* Tuiles « OF demandés » et « OF non débutés » retirées à la demande.
-          Les compteurs restent calculés côté API. */}
+    </div>
+
+    {/* Ligne 2 : ce qui est en attente de départ, et la charge restante. */}
+    <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-200 pt-3">
+      {STATUTS_LIGNE_2.map((label) => {
+        const sc = parStatut.get(label)
+        if (!sc) return null
+        return (
+          <Tile
+            key={label}
+            count={sc.count}
+            label={sc.label}
+            color={sc.color}
+          />
+        )
+      })}
+      <Tile
+        count={kpis.nbOfDemandeNonDebute}
+        label="OF demandés non débutés"
+        color="#d97706"
+        title="OF dont les composants ont été demandés mais dont la production n'a jamais commencé — la file d'attente réelle de la ligne"
+      />
       <Tile
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
         label="Prod. restante"
@@ -215,6 +246,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           `Calcul : pièces restantes ÷ cadence théorique. Hors changements de format, pauses et pannes.`
         }
       />
+    </div>
     </div>
   )
 }

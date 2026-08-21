@@ -28,6 +28,12 @@ export interface KPIs {
   /** OFs sans aucun event OFDE = production jamais démarrée */
   nbOfNonDebute: number
   /**
+   * OFs dont les composants ont été demandés mais qui n'ont jamais démarré.
+   * C'est la file d'attente réelle : la matière a été appelée, la ligne
+   * n'a pas encore lancé.
+   */
+  nbOfDemandeNonDebute: number
+  /**
    * Temps de production restant sur la ligne, en minutes — TOUS les OF, qu'ils
    * soient démarrés ou non. Par OF : pièces restantes ÷ cadence (pcs/min).
    * Répond à « il reste combien d'heures à produire ».

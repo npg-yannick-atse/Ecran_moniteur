@@ -317,12 +317,8 @@ export const OfCard = memo(function OfCard({ of }: Props) {
           )}
           {/* Statut logistique retiré d'ici : il porte sur la réception des
               composants, il est donc à sa place dans le modal composants. */}
-          {of.retard && (
-            <span className="flex animate-blink items-center gap-1 rounded bg-rose-500 px-3 py-1 text-[10px] font-bold text-white">
-              <AlertTriangle className="h-3 w-3" />
-              RETARD +{formatDureeMinutes(of.retardMinutes)}
-            </span>
-          )}
+          {/* Badge RETARD retiré de l'entête : les trois dates de fin
+              (ordo, théorique, réelle) disent déjà où en est l'OF. */}
           <div className="relative">
             <button
               type="button"
@@ -487,11 +483,12 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             {/* Quantité SF agrandie : c'est le chiffre que l'on cherche de
                 loin sur la ligne, il était en 10px. */}
             <span className="whitespace-nowrap text-2xl font-extrabold leading-none tabular-nums text-slate-800">
-              {formatNumber(Math.round(of.sf.qteFabriquee))}
-              <span className="mx-1 text-lg font-normal text-slate-400">/</span>
-              {of.sf.quantite != null
-                ? formatNumber(Math.round(of.sf.quantite))
-                : "--"}
+              {/* Chiffres bruts, sans séparateur de milliers : formatNumber
+                  insère un espace insécable étroit (U+202F) qui, sur deux
+                  nombres séparés par un slash, brouille la lecture. */}
+              {Math.round(of.sf.qteFabriquee)}
+              <span className="mx-1.5 text-lg font-normal text-slate-400">/</span>
+              {of.sf.quantite != null ? Math.round(of.sf.quantite) : "--"}
             </span>
             {/* Information seule, non cliquable : le détail des composants du
                 SF n'est pas consultable depuis ici. */}

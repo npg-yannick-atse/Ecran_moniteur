@@ -535,6 +535,7 @@ async function getDashboardImpl(
         nbOfEnConso: 0,
         nbOfDemande: 0,
         nbOfNonDebute: 0,
+        nbOfDemandeNonDebute: 0,
         dureeProductionResteMinutes: 0,
         dureeProductionResteEnCoursMinutes: 0,
         dureeProductionResteALancerMinutes: 0,
@@ -1804,6 +1805,9 @@ async function getDashboardImpl(
   ).length
   const ofsNonDebutes = ofRows.filter((r) => r.dateDebutProduction == null)
   const nbOfNonDebute = ofsNonDebutes.length
+  const nbOfDemandeNonDebute = ofsNonDebutes.filter(
+    (r) => r.dateDemandeComposant != null
+  ).length
 
   // Charge de production restante sur la ligne, en minutes de temps machine.
   // Compte TOUS les OF, pas seulement ceux à lancer : un OF démarré à 50 % a
@@ -1842,11 +1846,11 @@ async function getDashboardImpl(
   // d'œil, alors qu'une tuile absente oblige à se demander si le statut existe.
   const statusRef = await logQuery("ref_user_status", () =>
     prisma.$queryRaw<
-      { designation: string; color: string | null }[]
+      { designation: string; color: string | null; is_active: boolean }[]
     >`
-      SELECT designation, color
+      SELECT designation, color, ISNULL(is_active, 0) AS is_active
       FROM [dbo].[ref_user_status]
-      WHERE ISNULL(is_active, 0) = 1 AND ISNULL(vue_web, 0) = 1
+      WHERE ISNULL(vue_web, 0) = 1
       ORDER BY designation
     `
   )
@@ -1859,9 +1863,14 @@ async function getDashboardImpl(
     "Panne technique",
     "Problème qualité composant",
   ])
+  // "OF Validé" porte is_active = 0 en base alors que des OF le portent bel et
+  // bien : sans cette exception, sa tuile disparaissait dès qu'aucun OF de la
+  // ligne n'était dans cet état, au lieu d'afficher 0.
+  const STATUTS_INACTIFS_A_GARDER = new Set(["OF Validé"])
   const statusMap = new Map<string, { count: number; color: string }>()
   for (const s of statusRef) {
     if (STATUTS_MASQUES.has(s.designation)) continue
+    if (!s.is_active && !STATUTS_INACTIFS_A_GARDER.has(s.designation)) continue
     statusMap.set(s.designation, { count: 0, color: s.color || "#9E9E9E" })
   }
   for (const r of rows) {
@@ -1893,6 +1902,7 @@ async function getDashboardImpl(
     nbOfEnConso,
     nbOfDemande,
     nbOfNonDebute,
+    nbOfDemandeNonDebute,
     dureeProductionResteMinutes,
     dureeProductionResteEnCoursMinutes,
     dureeProductionResteALancerMinutes,
