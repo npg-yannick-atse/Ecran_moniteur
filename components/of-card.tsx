@@ -111,20 +111,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
     return of.quantite > 0 && karEtape >= of.quantite
   }
 
-  // Durée de production théorique de l'OF entier : quantité en pièces ÷
-  // cadence de la gamme. C'est le budget temps de l'OF.
-  const dureeTheoriqueMinutes =
-    of.quantiteTotalPieces != null && of.cadencePiecesParMinute
-      ? Math.round(of.quantiteTotalPieces / of.cadencePiecesParMinute)
-      : null
-  // Budget théorique correspondant aux pièces DÉJÀ produites — la seule
-  // comparaison honnête en cours de production, le budget total ne valant que
-  // sur un OF terminé.
-  const theoriquePourProduitMinutes =
-    of.cadencePiecesParMinute && of.qteRempliTotalPieces > 0
-      ? Math.round(of.qteRempliTotalPieces / of.cadencePiecesParMinute)
-      : null
-
   // ---- Cadence réellement tenue ------------------------------------------
   // pièces effectivement remplies ÷ temps effectivement produit (statut OF
   // Débuté). À comparer à la cadence théorique de la gamme : le rapport des
@@ -152,6 +138,33 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             cadenceReelle
         )
       : null
+
+  // ---- Dates de fin projetées --------------------------------------------
+  // Deux projections de la date à laquelle l'OF sera terminé : l'une au rythme
+  // de la gamme, l'autre au rythme réellement tenu. L'écart entre les deux dit
+  // le retard qui se creuse.
+  //
+  // Ce sont des minutes de PRODUCTION ajoutées à maintenant : la projection
+  // suppose une production continue, sans pause ni arrêt. La date réelle sera
+  // donc plus tardive — ces valeurs bornent l'optimisme, elles ne le prédisent
+  // pas.
+  const restePieces =
+    of.quantiteTotalPieces != null
+      ? Math.max(0, of.quantiteTotalPieces - of.qteRempliTotalPieces)
+      : null
+  const projeter = (minutes: number | null): string | null =>
+    minutes == null || restePieces === 0
+      ? null
+      : new Date(Date.now() + minutes * 60_000).toISOString()
+  const dateFinTheorique = projeter(
+    restePieces != null && of.cadencePiecesParMinute
+      ? restePieces / of.cadencePiecesParMinute
+      : null
+  )
+
+  const dateFinReelle = projeter(
+    restePieces != null && cadenceReelle ? restePieces / cadenceReelle : null
+  )
 
   // Temps écoulé depuis le démarrage RÉEL de la production (1er event OFDE),
   // pauses et arrêts compris. À comparer à "Durée Production (cumul)" qui, lui,
@@ -282,28 +295,24 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               théorique porte sur l'OF ENTIER : le comparer au réel n'a de sens
               qu'en fin d'OF. L'infobulle donne la comparaison à périmètre égal,
               sur les pièces déjà produites. */}
-          {of.dureeProductionEcouleeMinutes != null && (
+          {dateFinReelle && (
             <span
               className={cn(BADGE_BASE, "border-slate-300 bg-white text-slate-700")}
-              title={
-                theoriquePourProduitMinutes != null
-                  ? `Temps réellement produit (statut OF Débuté). À périmètre égal, les ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces déjà faites auraient dû prendre ${formatDureeMinutes(theoriquePourProduitMinutes)} à la cadence de la gamme.`
-                  : "Temps réellement produit (statut OF Débuté)"
-              }
+              title={`Fin projetée à la cadence réellement tenue (${cadenceReelle?.toFixed(1)} pcs/min) : ${restePieces?.toLocaleString("fr-FR")} pièces restantes, soit ${formatDureeMinutes(resteCadenceReelle)} de production. Suppose une production continue.`}
             >
               <Clock className="h-3.5 w-3.5" />
-              <span className="opacity-70">Réelle</span>
-              {formatDureeMinutes(of.dureeProductionEcouleeMinutes)}
+              <span className="opacity-70">Fin réelle</span>
+              {formatDateTimeFr(dateFinReelle)}
             </span>
           )}
-          {dureeTheoriqueMinutes != null && (
+          {dateFinTheorique && (
             <span
               className={cn(BADGE_BASE, "border-sky-300 bg-sky-50 text-sky-700")}
-              title={`Durée théorique de l'OF entier : ${of.quantiteTotalPieces?.toLocaleString("fr-FR")} pièces à ${of.cadencePiecesParMinute} pcs/min`}
+              title={`Fin projetée à la cadence de la gamme (${of.cadencePiecesParMinute} pcs/min) : ${restePieces?.toLocaleString("fr-FR")} pièces restantes. Suppose une production continue.`}
             >
               <Gauge className="h-3.5 w-3.5" />
-              <span className="opacity-70">Théorique</span>
-              {formatDureeMinutes(dureeTheoriqueMinutes)}
+              <span className="opacity-70">Fin théo.</span>
+              {formatDateTimeFr(dateFinTheorique)}
             </span>
           )}
           {/* Statut logistique retiré d'ici : il porte sur la réception des
@@ -572,14 +581,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               volontairement masquée — l'extrapolation n'était pas sur la même
               base que le cumul affiché. Le champ reste dispo côté API. */}
           <div className="grid grid-cols-2 gap-3">
-            <MetricBox
-              label="Durée Production (cumul)"
-              // Cumul du seul statut "OF Débuté" : c'est le temps de production
-              // effectif, hors pauses, pannes et attentes.
-              value={formatDureeMinutes(of.dureeProductionEcouleeMinutes)}
-              tone="cumul"
-              title="Σ des durées passées en statut « OF Débuté » — temps de production effectif, hors pauses, pannes et attentes"
-            />
             <MetricBox
               label="Écoulé depuis Date Début"
               value={formatDureeMinutes(ecouleDepuisDebutMinutes)}
