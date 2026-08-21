@@ -57,9 +57,9 @@ export function Header({
           <Factory className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-lg font-bold uppercase leading-tight">{title}</h1>
+          <h1 className="text-xl font-bold uppercase leading-tight">{title}</h1>
           {subtitle && (
-            <p className="font-mono text-xs text-wms-lighter">{subtitle}</p>
+            <p className="font-mono text-sm text-wms-lighter">{subtitle}</p>
           )}
         </div>
       </div>
