@@ -776,10 +776,13 @@ function QteBox({
             {badge}
           </span>
         )}
-        {/* Étape terminée : rond vert coché, aligné à droite de l'entête. */}
+        {/* Étape terminée : rond coché, aligné à droite de l'entête.
+            Vert pur (#16a34a) et non emerald, qui tire vers le turquoise et se
+            confondait avec le bleu-vert de la carte Qté Remplie. */}
         {finale && (
           <CircleCheck
-            className={cn("h-5 w-5 shrink-0 text-emerald-600", !badge && "ml-auto")}
+            className={cn("h-5 w-5 shrink-0", !badge && "ml-auto")}
+            style={{ color: "#16a34a" }}
             aria-label="Étape terminée"
           />
         )}
