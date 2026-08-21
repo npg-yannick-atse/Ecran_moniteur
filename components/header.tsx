@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Factory } from "lucide-react"
 import Link from "next/link"
-import { FullscreenButton } from "./fullscreen-button"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
@@ -66,7 +65,6 @@ export function Header({
 
       <div className="flex items-center gap-5">
         {rightSlot}
-        <FullscreenButton />
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 animate-live-pulse rounded-full bg-emerald-400" />
         </div>
