@@ -485,7 +485,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             )}
             {/* Quantité SF agrandie : c'est le chiffre que l'on cherche de
                 loin sur la ligne, il était en 10px. */}
-            <span className="whitespace-nowrap text-2xl font-extrabold leading-none tabular-nums text-slate-800">
+            <span className="whitespace-nowrap text-xl font-extrabold leading-none tabular-nums text-slate-800">
               {/* Chiffres bruts, sans séparateur de milliers : formatNumber
                   insère un espace insécable étroit (U+202F) qui, sur deux
                   nombres séparés par un slash, brouille la lecture. */}
@@ -691,7 +691,7 @@ function TotalBox({
           : `${label} — ${formatNumber(palettes)} palette(s) · ${totalPieces != null ? `${formatNumber(totalPieces)} pcs · ` : ""}${formatNumber(kar)} ${unit}`
       }
     >
-      <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide opacity-80">
+      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
         <Boxes className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
@@ -699,11 +699,11 @@ function TotalBox({
       {/* Chiffre phare : nb total de palettes de l'OF. Le "≈" signale que les
           fiches palette n'existent pas encore et que c'est le prévu calculé. */}
       <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-3xl font-extrabold leading-none tabular-nums">
+        <span className="text-2xl font-extrabold leading-none tabular-nums">
           {estimee && <span className="opacity-50">≈</span>}
           {formatNumber(palettes)}
         </span>
-        <span className="text-xs font-semibold uppercase opacity-70">
+        <span className="text-[11px] font-semibold uppercase opacity-70">
           palette{palettes > 1 ? "s" : ""}
         </span>
       </div>
@@ -711,15 +711,15 @@ function TotalBox({
       <div className="my-1.5 h-px bg-current opacity-20" />
 
       <div className="space-y-1">
-        <div className="text-base font-bold leading-none tabular-nums">
+        <div className="text-sm font-bold leading-none tabular-nums">
           {totalPieces != null ? formatNumber(totalPieces) : "—"}
-          <span className="ml-0.5 text-[11px] font-semibold opacity-70">
+          <span className="ml-0.5 text-[10px] font-semibold opacity-70">
             pcs
           </span>
         </div>
-        <div className="text-sm font-bold leading-none tabular-nums">
+        <div className="text-xs font-bold leading-none tabular-nums">
           {formatNumber(kar)}
-          <span className="ml-0.5 text-[11px] font-semibold opacity-70">
+          <span className="ml-0.5 text-[10px] font-semibold opacity-70">
             {unit}
           </span>
         </div>
@@ -768,7 +768,7 @@ function QteBox({
       )}
       title={`${label} — ${formatNumber(palettes)} palette(s) · ${formatNumber(totalPieces)} pcs · ${formatNumber(Math.round(kar))} CRN + ${formatNumber(pieces)} pcs`}
     >
-      <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide opacity-80">
+      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
         <Icon className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate">{label}</span>
         {badge && (
@@ -787,10 +787,10 @@ function QteBox({
 
       {/* Chiffre phare : palettes */}
       <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-3xl font-extrabold leading-none tabular-nums">
+        <span className="text-2xl font-extrabold leading-none tabular-nums">
           {formatNumber(palettes)}
         </span>
-        <span className="text-xs font-semibold uppercase opacity-70">
+        <span className="text-[11px] font-semibold uppercase opacity-70">
           palette{palettes > 1 ? "s" : ""}
         </span>
       </div>
@@ -799,20 +799,20 @@ function QteBox({
 
       {/* Total pièces, puis cartons entiers + reliquat */}
       <div className="space-y-1">
-        <div className="text-base font-bold leading-none tabular-nums">
+        <div className="text-sm font-bold leading-none tabular-nums">
           {formatNumber(totalPieces)}
-          <span className="ml-0.5 text-[11px] font-semibold opacity-70">
+          <span className="ml-0.5 text-[10px] font-semibold opacity-70">
             pcs
           </span>
         </div>
-        <div className="text-sm font-bold leading-none tabular-nums">
+        <div className="text-xs font-bold leading-none tabular-nums">
           {formatNumber(Math.round(kar))}
-          <span className="ml-0.5 text-[11px] font-semibold opacity-70">
+          <span className="ml-0.5 text-[10px] font-semibold opacity-70">
             CRN
           </span>
           <span className="mx-1 opacity-50">+</span>
           {formatNumber(pieces)}
-          <span className="ml-0.5 text-[11px] font-semibold opacity-70">
+          <span className="ml-0.5 text-[10px] font-semibold opacity-70">
             pcs
           </span>
         </div>
@@ -875,10 +875,10 @@ function MetricBox({
           : "border-amber-200 bg-amber-50 text-amber-700"
   const contenu = (
     <>
-      <div className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
+      <div className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
         {label}
       </div>
-      <div className="mt-1 text-base font-bold">{value}</div>
+      <div className="mt-1 text-sm font-bold">{value}</div>
     </>
   )
   if (onClick) {
