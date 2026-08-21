@@ -218,6 +218,13 @@ export interface OfRow {
   // Dosage = contenance cible par unité (prod_order_state.contenance).
   // Ex: article "GDO. D.E.S 500ML" → 530. Pas d'unité stockée en base.
   dosage: number | null
+  /**
+   * Bornes de tolérance du dosage (prod_order_state.contenance_min/max).
+   * Un contrôle qualité dont le poids sort de cet intervalle est hors
+   * tolérance. Renseignées sur 1 648 OF sur 3 595.
+   */
+  dosageMin: number | null
+  dosageMax: number | null
 
   // Énergie (WMS_MP_V2 : wf_order_event.current_energy_tag = index compteur cumulé)
   // Conso cumulée PF + SF : somme des deltas d'index (dernier − premier relevé)

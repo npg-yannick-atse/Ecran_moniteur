@@ -395,6 +395,8 @@ async function getDashboardImpl(
     base_temps: unknown
     cadence_libelle: string | null
     contenance: unknown // dosage cible par unité
+    contenance_min: unknown // borne basse de tolérance (prod_order_state)
+    contenance_max: unknown // borne haute
     gerbage: number | null // nb de cartons (CRN) par palette
     debut_ordonnancement: Date | null
     date_debut_ordonnancement: Date | null
@@ -446,6 +448,7 @@ async function getDashboardImpl(
       pf.code_article, pf.designation_article, pf.type_article,
       pf.qte_of, pf.qte_remplir, pf.qte_polypacker, pf.qte_livrer, pf.qte_piece_globale, pf.colisage, pf.unite,
       pf.cadence, pf.base_temps, pf.cadence_libelle, pf.contenance, pf.gerbage,
+      pos.contenance_min, pos.contenance_max,
       pf.debut_ordonnancement, pf.date_debut_ordonnancement, pf.heure_debut_ordonnancement,
       pf.date_fin_ordonnancement, pf.heure_fin_ordonnancement,
       pf.id_status_FK, pf.status_designation, pf.status_color,
@@ -474,6 +477,9 @@ async function getDashboardImpl(
       sf.total_qte_remplissage         AS sf_total_qte_remplissage,
       sf.pct_remplissage               AS sf_pct_remplissage
     FROM [dbo].[v_statistique_production_of] pf
+    -- Bornes de tolérance du dosage. Table en 1:1 avec les OF (3595/3595),
+    -- la jointure ne peut donc pas dupliquer de ligne.
+    LEFT JOIN [dbo].[prod_order_state] pos ON pos.id_order_fk = pf.id_of
     -- Jointure SF : si plusieurs SF portent le même code (ex: OF retéléchargé
     -- plusieurs fois en DB), on garde uniquement celui avec l'id_of le plus
     -- élevé (= le plus récent).
@@ -1681,6 +1687,14 @@ async function getDashboardImpl(
       cadenceLibelle: r.cadence_libelle,
       dosage: (() => {
         const d = Number(r.contenance)
+        return Number.isFinite(d) && d > 0 ? d : null
+      })(),
+      dosageMin: (() => {
+        const d = Number(r.contenance_min)
+        return Number.isFinite(d) && d > 0 ? d : null
+      })(),
+      dosageMax: (() => {
+        const d = Number(r.contenance_max)
         return Number.isFinite(d) && d > 0 ? d : null
       })(),
 

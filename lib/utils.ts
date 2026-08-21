@@ -114,6 +114,26 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`
 }
 
+/**
+ * Un contrôle qualité est hors tolérance quand le poids mesuré à l'unité sort
+ * des bornes du dosage (prod_order_state.contenance_min/max). Renvoie false
+ * quand les bornes ou le poids manquent : on ne signale que ce qu'on sait.
+ *
+ * Les décimales SQL Server remontent en chaîne via `$queryRaw` — d'où le
+ * Number() explicite, sans lequel la comparaison serait lexicographique.
+ */
+export function horsTolerance(
+  poids: number | null,
+  min: number | null,
+  max: number | null
+): boolean {
+  const p = Number(poids)
+  if (!Number.isFinite(p) || p <= 0) return false
+  if (min != null && p < min) return true
+  if (max != null && p > max) return true
+  return false
+}
+
 export function formatNumber(n: number | null | undefined): string {
   if (n == null) return "--"
   return n.toLocaleString("fr-FR")

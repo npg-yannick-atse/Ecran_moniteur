@@ -7,6 +7,7 @@ import {
   formatDureeMinutes,
   formatNumber,
   formatOf,
+  horsTolerance,
   relativeLuminance,
 } from "@/lib/utils"
 import type { OfRow } from "@/lib/types"
@@ -178,6 +179,13 @@ export const OfCard = memo(function OfCard({ of }: Props) {
         )
       )
     : null
+
+  // Contrôles qualité dont le poids sort des bornes de dosage. Signalés par
+  // une alerte sur la tuile : un dosage hors tolérance est un rebut potentiel,
+  // ça ne doit pas attendre l'ouverture du détail.
+  const controlesHorsTolerance = of.qualityEvents.filter((c) =>
+    horsTolerance(c.poids, of.dosageMin, of.dosageMax)
+  ).length
 
   // Dernière période de statut = statut courant de l'OF. Sa durée court
   // jusqu'à maintenant (calculée côté API, rafraîchie à chaque poll).
@@ -600,7 +608,12 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               label="Contrôles Qualité / Durée Prod"
               value={`${of.qualityEvents.length} / ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)}`}
               tone="qualite"
-              title={`${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective — cliquer pour le détail`}
+              alerte={controlesHorsTolerance > 0}
+              title={
+                controlesHorsTolerance > 0
+                  ? `${controlesHorsTolerance} contrôle(s) hors tolérance : poids en dehors de [${of.dosageMin} – ${of.dosageMax}]. Cliquer pour le détail.`
+                  : `${of.qualityEvents.length} contrôle(s) qualité pour ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective — cliquer pour le détail`
+              }
               onClick={() => setShowQualite(true)}
             />
             {/* Ce que l'OF entier coûtera en temps machine au rythme constaté,
@@ -858,6 +871,7 @@ function MetricBox({
   tone,
   title,
   onClick,
+  alerte,
 }: {
   label: string
   value: string
@@ -865,6 +879,8 @@ function MetricBox({
   title?: string
   /** Rend la carte cliquable — elle devient alors un vrai <button>. */
   onClick?: () => void
+  /** Affiche un triangle rouge : une valeur demande une action. */
+  alerte?: boolean
 }) {
   const cls =
     tone === "ordo"
@@ -878,8 +894,11 @@ function MetricBox({
           : "border-amber-200 bg-amber-50 text-amber-700"
   const contenu = (
     <>
-      <div className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
-        {label}
+      <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide opacity-80">
+        {alerte && (
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
+        )}
+        <span className="truncate">{label}</span>
       </div>
       <div className="mt-1 text-base font-bold">{value}</div>
     </>
@@ -892,7 +911,8 @@ function MetricBox({
         title={title}
         className={cn(
           "rounded-lg border px-3 py-2 text-left transition-transform hover:scale-[1.02] hover:shadow-md",
-          cls
+          cls,
+          alerte && "border-rose-400 ring-2 ring-rose-200"
         )}
       >
         {contenu}

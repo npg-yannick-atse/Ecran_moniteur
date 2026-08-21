@@ -11,8 +11,8 @@
  */
 
 import { useEffect } from "react"
-import { FlaskConical, X } from "lucide-react"
-import { formatDureeMinutes, formatOf } from "@/lib/utils"
+import { AlertTriangle, FlaskConical, X } from "lucide-react"
+import { cn, formatDureeMinutes, formatOf, horsTolerance } from "@/lib/utils"
 import type { OfRow } from "@/lib/types"
 
 interface Props {
@@ -46,6 +46,9 @@ export function QualiteModal({ of, onClose }: Props) {
   const controles = [...of.qualityEvents].sort(
     (a, b) => +new Date(b.date) - +new Date(a.date)
   )
+  const hors = (c: { poids: number | null }) =>
+    horsTolerance(c.poids, of.dosageMin, of.dosageMax)
+  const nbHors = controles.filter(hors).length
 
   return (
     <div
@@ -68,6 +71,19 @@ export function QualiteModal({ of, onClose }: Props) {
               {controles.length} contrôle{controles.length > 1 ? "s" : ""} pour{" "}
               {formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de
               production effective
+              {of.dosageMin != null && of.dosageMax != null && (
+                <>
+                  {" · tolérance "}
+                  <b className="tabular-nums">
+                    {of.dosageMin} – {of.dosageMax}
+                  </b>
+                </>
+              )}
+              {nbHors > 0 && (
+                <b className="ml-2 rounded bg-rose-100 px-2 py-0.5 text-rose-700">
+                  {nbHors} hors tolérance
+                </b>
+              )}
             </p>
           </div>
           <button
@@ -90,7 +106,6 @@ export function QualiteModal({ of, onClose }: Props) {
               <table className="w-full min-w-[880px] text-left text-sm">
                 <thead className="bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-700">
                   <tr>
-                    <th className="px-3 py-2 text-right">ID</th>
                     <th className="px-3 py-2">Lot contrôle</th>
                     <th className="px-3 py-2 text-right">N° Échantillon</th>
                     <th className="px-3 py-2 text-right">Nombre d'échantillon</th>
@@ -102,10 +117,12 @@ export function QualiteModal({ of, onClose }: Props) {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {controles.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 text-right tabular-nums text-slate-400">
-                        {c.id}
-                      </td>
+                    <tr
+                      key={c.id}
+                      className={cn(
+                        hors(c) ? "bg-rose-50 hover:bg-rose-100" : "hover:bg-slate-50"
+                      )}
+                    >
                       <td className="px-3 py-2 font-mono tabular-nums text-slate-700">
                         {c.lotControle || "—"}
                       </td>
@@ -115,7 +132,20 @@ export function QualiteModal({ of, onClose }: Props) {
                       <td className="px-3 py-2 text-right font-bold tabular-nums text-violet-700">
                         {c.nombreEchantillon ?? "—"}
                       </td>
-                      <td className="px-3 py-2 text-right font-semibold tabular-nums text-slate-800">
+                      <td
+                        className={cn(
+                          "px-3 py-2 text-right font-bold tabular-nums",
+                          hors(c) ? "text-rose-700" : "text-slate-800"
+                        )}
+                        title={
+                          hors(c)
+                            ? `Hors tolérance : attendu entre ${of.dosageMin} et ${of.dosageMax}`
+                            : undefined
+                        }
+                      >
+                        {hors(c) && (
+                          <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
+                        )}
                         {c.poids ?? "—"}
                       </td>
                       <td className="px-3 py-2 text-slate-600">
