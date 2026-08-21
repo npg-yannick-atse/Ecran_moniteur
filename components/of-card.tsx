@@ -540,9 +540,33 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             />
           </div>
 
-          {/* Bloc bas (cards durée/dates + barres) : occupe l'espace restant
-              (flex-1) et tout le groupe est poussé en BAS (justify-end), l'espace
-              libre se plaçant au-dessus des cards. */}
+          {/* Barres de progression en cascade : TH → Rempli → Polypack → Livré.
+              Placées juste sous les cartes quantité qu'elles résument, plutôt
+              qu'en bas de colonne : elles se lisent avec elles, et l'espace
+              vide qui traînait au milieu disparaît. */}
+          <div className="space-y-2">
+            <ProgressBar
+              label="Qté Remplie / Quantité TH"
+              numerator={of.qteRempli}
+              denominator={of.quantite}
+              pct={rempliPct}
+            />
+            <ProgressBar
+              label="Qté Fardelée / Qté Remplie"
+              numerator={of.qtePolypackee}
+              denominator={of.qteRempli}
+              pct={polypackSurRempliPct}
+            />
+            <ProgressBar
+              label="Qté Livrée / Qté Fardelée"
+              numerator={of.qteLivree}
+              denominator={of.qtePolypackee}
+              pct={livreSurPolypackPct}
+            />
+          </div>
+
+          {/* Cards durées/dates : poussées en bas de colonne (flex-1 +
+              justify-end), l'espace libre restant se plaçant au-dessus. */}
           <div className="flex flex-1 flex-col justify-end gap-3">
           {/* "Durée Reste Production" (of.dureeResteProductionMinutes) est
               volontairement masquée — l'extrapolation n'était pas sur la même
@@ -590,27 +614,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             />
           </div>
 
-          {/* Barres de progression en cascade : TH → Rempli → Polypack → Livré */}
-          <div className="space-y-2">
-            <ProgressBar
-              label="Qté Remplie / Quantité TH"
-              numerator={of.qteRempli}
-              denominator={of.quantite}
-              pct={rempliPct}
-            />
-            <ProgressBar
-              label="Qté Fardelée / Qté Remplie"
-              numerator={of.qtePolypackee}
-              denominator={of.qteRempli}
-              pct={polypackSurRempliPct}
-            />
-            <ProgressBar
-              label="Qté Livrée / Qté Fardelée"
-              numerator={of.qteLivree}
-              denominator={of.qtePolypackee}
-              pct={livreSurPolypackPct}
-            />
-          </div>
           </div>
         </div>
 
