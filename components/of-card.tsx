@@ -523,12 +523,12 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pct={livreSurPolypackPct}
             />
           </div>
-          {/* Cadence en vis-à-vis de la date de fin qu'elle produit : chaque
-              ligne se lit « à ce rythme, l'OF finit à cette heure ». L'écart
-              entre les deux lignes est directement l'écart au plan. */}
+          {/* Chaque tuile associe une cadence à la date de fin qu'elle produit :
+              « à ce rythme, l'OF finit à cette heure ». L'écart entre les deux
+              tuiles est directement l'écart au plan. */}
           {(cadenceReelle != null || of.cadencePiecesParMinute != null) && (
-            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
-              <CadenceFinLigne
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <CadenceFinTuile
                 icone={TrendingUp}
                 libelle="Réelle"
                 cadence={
@@ -549,7 +549,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 }
                 title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence de la gamme` : ""}. Fin projetée à ce rythme, production continue supposée.`}
               />
-              <CadenceFinLigne
+              <CadenceFinTuile
                 icone={Gauge}
                 libelle="Théorique"
                 cadence={
@@ -563,7 +563,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               />
             </div>
           )}
-
 
           {/* Cards durées/dates : poussées en bas de colonne (flex-1 +
               justify-end), l'espace libre restant se plaçant au-dessus. */}
@@ -847,11 +846,11 @@ function TimelineLegendPopover({ onClose }: { onClose: () => void }) {
 }
 
 /**
- * Une ligne du bloc « cadence ↔ date de fin » : la cadence à gauche, la date
- * de fin qu'elle implique à droite. Les mettre en vis-à-vis évite d'avoir à
- * relier mentalement deux badges éloignés dans l'entête.
+ * Tuile « cadence → date de fin », au même gabarit que les MetricBox voisines.
+ * La cadence en chiffre principal, la date de fin qu'elle implique juste en
+ * dessous : chaque tuile se lit « à ce rythme, l'OF finit à cette heure ».
  */
-function CadenceFinLigne({
+function CadenceFinTuile({
   icone: Icone,
   libelle,
   cadence,
@@ -868,37 +867,34 @@ function CadenceFinLigne({
 }) {
   const cls =
     ton === "ok"
-      ? "bg-emerald-50 text-emerald-800"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
       : ton === "alerte"
-        ? "bg-amber-50 text-amber-800"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
         : ton === "theo"
-          ? "bg-sky-50 text-sky-800"
-          : "bg-slate-50 text-slate-700"
+          ? "border-sky-200 bg-sky-50 text-sky-800"
+          : "border-slate-200 bg-slate-50 text-slate-700"
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-2 border-b border-white/60 px-3 py-2 text-sm last:border-b-0",
-        cls
-      )}
-      title={title}
-    >
-      <span className="flex min-w-0 items-center gap-1.5 font-bold tabular-nums">
-        <Icone className="h-4 w-4 shrink-0" />
-        <span className="text-[10px] font-semibold uppercase opacity-70">
-          {libelle}
-        </span>
+    <div className={cn("rounded-lg border px-3 py-2", cls)} title={title}>
+      <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide opacity-80">
+        <Icone className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate">Cadence {libelle}</span>
+      </div>
+      <div className="mt-1 text-base font-bold tabular-nums">
         {cadence ?? "--"}
-        <span className="text-[10px] font-semibold opacity-70">pcs/min</span>
-      </span>
-      <span className="flex shrink-0 items-center gap-1.5 font-bold tabular-nums">
-        <span className="text-[10px] font-semibold uppercase opacity-70">
+        <span className="ml-1 text-[10px] font-semibold opacity-70">
+          pcs/min
+        </span>
+      </div>
+      <div className="mt-0.5 text-sm font-semibold tabular-nums opacity-90">
+        <span className="mr-1 text-[10px] font-semibold uppercase opacity-70">
           Fin
         </span>
         {date ? formatDateTimeFr(date) : "--"}
-      </span>
+      </div>
     </div>
   )
 }
+
 
 function MetricBox({
   label,
