@@ -219,7 +219,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
     </div>
 
     {/* Ligne 2 : ce qui est en attente de départ, et la charge restante. */}
-    <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-200 pt-3">
+    <div className="mt-3 flex flex-wrap justify-center gap-3 border-t border-slate-200 pt-3">
       {STATUTS_LIGNE_2.map((label) => {
         const sc = parStatut.get(label)
         if (!sc) return null

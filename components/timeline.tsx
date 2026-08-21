@@ -181,16 +181,20 @@ export function Timeline({ of }: Props) {
       const span = recent[recent.length - 1] - recent[0]
       const pad = Math.max(span * 0.35, 60 * 60 * 1000)
       const finCluster = recent[recent.length - 1] + pad
-      // Tant qu'un statut court, la fenêtre va jusqu'à maintenant — c'est ce
-      // qui rend le marqueur "Maintenant" visible et donne à la bande du
-      // statut courant sa vraie longueur. Le trait se cale au bord droit.
+      // Tant qu'un statut court, la fenêtre s'arrête À MAINTENANT — le trait
+      // vert se cale au bord droit et toute la largeur sert aux données.
+      //
+      // Surtout PAS max(finCluster, maintenant) : la marge du cluster fait au
+      // moins une heure, et comme les événements sont tous passés, elle
+      // repoussait systématiquement le bord au-delà de maintenant. Le max ne
+      // sert plus que de garde contre une horloge qui aurait dérivé.
       const statutEnCours = of.statusHistoryPF.some((p) => p.end == null)
-      const finMaintenant = Date.now() + margeApresMaintenant(span)
+      const finReelle =
+        Math.max(Date.now(), recent[recent.length - 1]) +
+        margeApresMaintenant(span)
       return {
         shiftStart: recent[0] - pad,
-        shiftEnd: statutEnCours
-          ? Math.max(finCluster, finMaintenant)
-          : finCluster,
+        shiftEnd: statutEnCours ? finReelle : finCluster,
       }
     }
     return {
