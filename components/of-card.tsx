@@ -369,13 +369,16 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             <span
               className={cn(
                 BADGE_BASE,
+                // Deux niveaux seulement : la cadence est tenue, ou elle
+                // ne l'est pas. Le rouge suggérait une gravité que le seuil
+                // ne mesure pas — le temps "OF Débuté" inclut les micro-arrêts
+                // non déclarés, ce qui tire mécaniquement le rendement vers
+                // le bas sans que la ligne soit en difficulté.
                 rendementPct == null
                   ? "border-slate-300 bg-slate-50 text-slate-700"
-                  : rendementPct >= 85
+                  : rendementPct >= 100
                     ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : rendementPct >= 60
-                      ? "border-amber-300 bg-amber-50 text-amber-700"
-                      : "border-rose-300 bg-rose-50 text-rose-700"
+                    : "border-amber-300 bg-amber-50 text-amber-700"
               )}
               title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence théorique de ${of.cadencePiecesParMinute} pcs/min` : ""}`}
             >
