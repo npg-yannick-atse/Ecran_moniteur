@@ -22,7 +22,6 @@ import {
   Boxes,
   CalendarClock,
   CircleCheck,
-  Clock,
   Droplets,
   Gauge,
   Info as InfoIcon,
@@ -303,26 +302,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               théorique porte sur l'OF ENTIER : le comparer au réel n'a de sens
               qu'en fin d'OF. L'infobulle donne la comparaison à périmètre égal,
               sur les pièces déjà produites. */}
-          {dateFinReelle && (
-            <span
-              className={cn(BADGE_BASE, "border-slate-300 bg-white text-slate-700")}
-              title={`Fin projetée à la cadence réellement tenue (${cadenceReelle?.toFixed(1)} pcs/min) : ${restePieces?.toLocaleString("fr-FR")} pièces restantes, soit ${formatDureeMinutes(resteCadenceReelle)} de production. Suppose une production continue.`}
-            >
-              <Clock className="h-3.5 w-3.5" />
-              <span className="opacity-70">Fin réelle</span>
-              {formatDateTimeFr(dateFinReelle)}
-            </span>
-          )}
-          {dateFinTheorique && (
-            <span
-              className={cn(BADGE_BASE, "border-sky-300 bg-sky-50 text-sky-700")}
-              title={`Fin projetée à la cadence de la gamme (${of.cadencePiecesParMinute} pcs/min) : ${restePieces?.toLocaleString("fr-FR")} pièces restantes. Suppose une production continue.`}
-            >
-              <Gauge className="h-3.5 w-3.5" />
-              <span className="opacity-70">Fin théo.</span>
-              {formatDateTimeFr(dateFinTheorique)}
-            </span>
-          )}
           {/* Statut logistique retiré d'ici : il porte sur la réception des
               composants, il est donc à sa place dans le modal composants. */}
           {/* Badge RETARD retiré de l'entête : les trois dates de fin
@@ -357,45 +336,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               <Beaker className="h-3.5 w-3.5" />
               <span className="opacity-70">Dosage</span>
               {formatNumber(of.dosage)}
-            </span>
-          )}
-          {of.cadencePiecesParMinute != null && (
-            <span
-              className={cn(BADGE_BASE, "border-sky-300 bg-sky-50 text-sky-700")}
-              title={
-                of.cadenceLibelle
-                  ? `Cadence théorique — ${of.cadenceLibelle}`
-                  : "Cadence théorique"
-              }
-            >
-              <Gauge className="h-3.5 w-3.5" />
-              {formatNumber(of.cadencePiecesParMinute)}
-              <span className="opacity-70">pcs/min</span>
-            </span>
-          )}
-          {cadenceReelle != null && (
-            <span
-              className={cn(
-                BADGE_BASE,
-                // Deux niveaux seulement : la cadence est tenue, ou elle
-                // ne l'est pas. Le rouge suggérait une gravité que le seuil
-                // ne mesure pas — le temps "OF Débuté" inclut les micro-arrêts
-                // non déclarés, ce qui tire mécaniquement le rendement vers
-                // le bas sans que la ligne soit en difficulté.
-                rendementPct == null
-                  ? "border-slate-300 bg-slate-50 text-slate-700"
-                  : rendementPct >= 100
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : "border-amber-300 bg-amber-50 text-amber-700"
-              )}
-              title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence théorique de ${of.cadencePiecesParMinute} pcs/min` : ""}`}
-            >
-              <TrendingUp className="h-3.5 w-3.5" />
-              {cadenceReelle.toLocaleString("fr-FR", {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-              <span className="opacity-70">pcs/min réelle</span>
             </span>
           )}
           {of.nbTotalComposants > 0 && (
@@ -583,6 +523,47 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pct={livreSurPolypackPct}
             />
           </div>
+          {/* Cadence en vis-à-vis de la date de fin qu'elle produit : chaque
+              ligne se lit « à ce rythme, l'OF finit à cette heure ». L'écart
+              entre les deux lignes est directement l'écart au plan. */}
+          {(cadenceReelle != null || of.cadencePiecesParMinute != null) && (
+            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
+              <CadenceFinLigne
+                icone={TrendingUp}
+                libelle="Réelle"
+                cadence={
+                  cadenceReelle != null
+                    ? cadenceReelle.toLocaleString("fr-FR", {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })
+                    : null
+                }
+                date={dateFinReelle}
+                ton={
+                  rendementPct == null
+                    ? "neutre"
+                    : rendementPct >= 100
+                      ? "ok"
+                      : "alerte"
+                }
+                title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence de la gamme` : ""}. Fin projetée à ce rythme, production continue supposée.`}
+              />
+              <CadenceFinLigne
+                icone={Gauge}
+                libelle="Théorique"
+                cadence={
+                  of.cadencePiecesParMinute != null
+                    ? formatNumber(of.cadencePiecesParMinute)
+                    : null
+                }
+                date={dateFinTheorique}
+                ton="theo"
+                title={`Cadence de la gamme${of.cadenceLibelle ? ` — ${of.cadenceLibelle}` : ""}. Fin projetée à ce rythme, production continue supposée.`}
+              />
+            </div>
+          )}
+
 
           {/* Cards durées/dates : poussées en bas de colonne (flex-1 +
               justify-end), l'espace libre restant se plaçant au-dessus. */}
@@ -862,6 +843,60 @@ function TimelineLegendPopover({ onClose }: { onClose: () => void }) {
         </ul>
       </div>
     </>
+  )
+}
+
+/**
+ * Une ligne du bloc « cadence ↔ date de fin » : la cadence à gauche, la date
+ * de fin qu'elle implique à droite. Les mettre en vis-à-vis évite d'avoir à
+ * relier mentalement deux badges éloignés dans l'entête.
+ */
+function CadenceFinLigne({
+  icone: Icone,
+  libelle,
+  cadence,
+  date,
+  ton,
+  title,
+}: {
+  icone: React.ComponentType<{ className?: string }>
+  libelle: string
+  cadence: string | null
+  date: string | null
+  ton: "ok" | "alerte" | "theo" | "neutre"
+  title?: string
+}) {
+  const cls =
+    ton === "ok"
+      ? "bg-emerald-50 text-emerald-800"
+      : ton === "alerte"
+        ? "bg-amber-50 text-amber-800"
+        : ton === "theo"
+          ? "bg-sky-50 text-sky-800"
+          : "bg-slate-50 text-slate-700"
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 border-b border-white/60 px-3 py-2 text-sm last:border-b-0",
+        cls
+      )}
+      title={title}
+    >
+      <span className="flex min-w-0 items-center gap-1.5 font-bold tabular-nums">
+        <Icone className="h-4 w-4 shrink-0" />
+        <span className="text-[10px] font-semibold uppercase opacity-70">
+          {libelle}
+        </span>
+        {cadence ?? "--"}
+        <span className="text-[10px] font-semibold opacity-70">pcs/min</span>
+      </span>
+      <span className="flex shrink-0 items-center gap-1.5 font-bold tabular-nums">
+        <span className="text-[10px] font-semibold uppercase opacity-70">
+          Fin
+        </span>
+        {date ? formatDateTimeFr(date) : "--"}
+      </span>
+    </div>
   )
 }
 
