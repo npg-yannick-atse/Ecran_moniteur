@@ -85,6 +85,14 @@ const railLabel = (v: number): string =>
                 ? "Statut PF"
                 : ""
 
+/**
+ * Marge laissée APRÈS le marqueur "Maintenant" : juste de quoi ne pas coller
+ * le trait au bord, pas plus. Toute marge supplémentaire serait du vide, alors
+ * que la place doit servir aux données.
+ */
+const margeApresMaintenant = (span: number) =>
+  Math.min(Math.max(span * 0.02, 60_000), 15 * 60_000)
+
 const STATUS_BAND_Y = 1
 const QUALITY_Y = 5
 const INTERVENTION_Y = 6
@@ -130,11 +138,20 @@ export function Timeline({ of }: Props) {
     const s = mins.length ? Math.min(...mins) : Date.now() - 86_400_000
     const e = maxs.length ? Math.max(...maxs) : Date.now()
     const pad = Math.max((e - s) * 0.03, 10 * 60_000)
+    // Quand c'est "maintenant" qui borne la fenêtre, on ne pousse pas la marge
+    // habituelle derrière : le trait doit finir au bord.
+    const padFin = statutEnCours && e === Math.max(...maxs, Date.now())
+      ? margeApresMaintenant(e - s)
+      : pad
     // Dernière opération réelle = dernier event OU dernière fin de statut
     // (pas les anchors qui sont des dates de référence, pas des opérations)
     const opsOnly = [...eventTs, ...statusEnds]
     const lastOp = opsOnly.length > 0 ? Math.max(...opsOnly) : e
-    return { defaultStart: s - pad, defaultEnd: e + pad, lastOperationTs: lastOp }
+    return {
+      defaultStart: s - pad,
+      defaultEnd: e + padFin,
+      lastOperationTs: lastOp,
+    }
   }, [of])
 
   // Fenêtre "Shift" : les 10 derniers events de TOUTES les sources (events,
@@ -166,10 +183,9 @@ export function Timeline({ of }: Props) {
       const finCluster = recent[recent.length - 1] + pad
       // Tant qu'un statut court, la fenêtre va jusqu'à maintenant — c'est ce
       // qui rend le marqueur "Maintenant" visible et donne à la bande du
-      // statut courant sa vraie longueur. Au plus 2 h de vide après lui.
+      // statut courant sa vraie longueur. Le trait se cale au bord droit.
       const statutEnCours = of.statusHistoryPF.some((p) => p.end == null)
-      const finMaintenant =
-        Date.now() + Math.min(pad, 2 * 60 * 60 * 1000)
+      const finMaintenant = Date.now() + margeApresMaintenant(span)
       return {
         shiftStart: recent[0] - pad,
         shiftEnd: statutEnCours
