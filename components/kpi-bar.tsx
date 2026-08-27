@@ -256,12 +256,17 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           />
         )
       })}
-      <Tile
-        count={kpis.nbOfDemandeNonDebute}
-        label="OF demandés non débutés"
-        color="#d97706"
-        title="OF dont les composants ont été demandés, dont la production n'a jamais commencé, et qui ont quitté le statut « OF Validé » — les validés en sont exclus pour qu'aucun OF ne soit compté dans les deux tuiles."
-      />
+      {/* Seule tuile à disparaître quand elle est à zéro, plutôt qu'à s'estomper
+          comme les statuts : sur la plupart des lignes elle vaut 0 en permanence,
+          et une tuile vide en permanence n'apprend rien à personne. */}
+      {kpis.nbOfDemandeNonDebute > 0 && (
+        <Tile
+          count={kpis.nbOfDemandeNonDebute}
+          label="OF demandés non débutés"
+          color="#d97706"
+          title="OF dont les composants ont été demandés, dont la production n'a jamais commencé, et qui ont quitté le statut « OF Validé » — les validés en sont exclus pour qu'aucun OF ne soit compté dans les deux tuiles."
+        />
+      )}
       <Tile
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
         label="Charge planifiée"
