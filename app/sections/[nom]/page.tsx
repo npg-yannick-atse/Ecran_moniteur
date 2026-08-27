@@ -98,11 +98,13 @@ export default function SectionPage() {
                     <div className="absolute right-4 top-4 rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[11px] font-semibold text-white">
                       {ligne.nbOf} OF
                     </div>
-                    <h3 className="text-base font-bold text-white">
-                      {ligne.code}
-                    </h3>
-                    <p className="mt-1 text-[11px] uppercase tracking-wider text-wms-lighter">
+                    {/* Nom en haut, code en dessous — même hiérarchie que
+                        l entête du dashboard de ligne. */}
+                    <h3 className="text-base font-bold uppercase text-white">
                       {ligne.designation}
+                    </h3>
+                    <p className="mt-1 font-mono text-xs tracking-wider text-wms-lighter">
+                      {ligne.code}
                     </p>
                   </div>
                   <div className="px-5 py-4">

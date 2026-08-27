@@ -697,6 +697,7 @@ async function getDashboardImpl(
     id_of_FK: number
     nb_items: number
     nb_receptionnes: number
+    nb_qte_incomplete: number
   }
   // allIds et non pfIds : le badge du bloc SF affiche aussi son compte de
   // composants réceptionnés. Les composants "spéciaux" (ref_special_component)
@@ -725,7 +726,13 @@ async function getDashboardImpl(
             SELECT
               oi.id_of_FK,
               COUNT(*) AS nb_items,
-              SUM(CASE WHEN oi.id_status_FK = 8 THEN 1 ELSE 0 END) AS nb_receptionnes
+              SUM(CASE WHEN oi.id_status_FK = 8 THEN 1 ELSE 0 END) AS nb_receptionnes,
+              -- Composants dont la quantité reçue n'atteint pas la quantité
+              -- requise : un composant peut être marqué réceptionné alors
+              -- qu'il en manque une partie.
+              SUM(CASE WHEN ISNULL(oi.qte_requise,0) > 0
+                        AND ISNULL(oi.qte_receptionne,0) < oi.qte_requise
+                       THEN 1 ELSE 0 END) AS nb_qte_incomplete
             FROM [dbo].[of_item] oi
             WHERE oi.id_of_FK IN (${Prisma.join(allIds)})
               AND ISNULL(oi.annuler, 0) = 0
@@ -766,6 +773,7 @@ async function getDashboardImpl(
       {
         nb_items: Number(c.nb_items),
         nb_receptionnes: Number(c.nb_receptionnes),
+        nb_qte_incomplete: Number(c.nb_qte_incomplete),
       },
     ])
   )
@@ -1585,6 +1593,8 @@ async function getDashboardImpl(
       nbComposantsReceptionnes:
         composantsByOfId.get(r.id_of)?.nb_receptionnes ?? 0,
       nbTotalComposants: composantsByOfId.get(r.id_of)?.nb_items ?? 0,
+      nbComposantsQuantiteIncomplete:
+        composantsByOfId.get(r.id_of)?.nb_qte_incomplete ?? 0,
 
       statusUtilisateur: badgeFromView(
         r.statusUtilisateur_designation,

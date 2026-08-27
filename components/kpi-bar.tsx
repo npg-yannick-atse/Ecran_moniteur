@@ -124,7 +124,7 @@ function formatKpiWithTotal(
  * Ce sont les états d'attente : ce qui est prêt à partir, ou volontairement
  * suspendu. Ils sont retirés de la première ligne pour ne pas figurer 2 fois.
  */
-const STATUTS_LIGNE_2 = ["OF Validé", "Pause production Planifiée"]
+const STATUTS_LIGNE_2 = ["Pause production Planifiée"]
 
 export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
   const parStatut = new Map(kpis.statusCounts.map((s) => [s.label, s]))
@@ -239,14 +239,8 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
         )
       })}
       <Tile
-        count={kpis.nbOfDemandeNonDebute}
-        label="OF demandés non débutés"
-        color="#d97706"
-        title="OF dont les composants ont été demandés mais dont la production n'a jamais commencé — la file d'attente réelle de la ligne"
-      />
-      <Tile
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
-        label="Prod. restante"
+        label="Charge planifiée"
         color="#7c3aed"
         title={
           `Temps de production restant sur la ligne, tous OF confondus : ` +

@@ -172,6 +172,12 @@ export interface OfRow {
   // composants (nomenclature) sur cet OF
   nbComposantsReceptionnes: number // of_item.batch IS NOT NULL count
   nbTotalComposants: number // total of_item count
+  /**
+   * Composants réceptionnés mais dont la quantité reçue reste inférieure à la
+   * quantité requise. Un OF peut afficher 5/5 composants tout en étant
+   * incomplet en volume.
+   */
+  nbComposantsQuantiteIncomplete: number
 
   // statuts (texte prêt à afficher + couleur)
   statusUtilisateur: StatusBadge

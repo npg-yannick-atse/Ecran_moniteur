@@ -5,6 +5,7 @@ import {
   formatDateFr,
   formatDateTimeFr,
   formatDureeMinutes,
+  formatHeuresMinutes,
   formatNumber,
   formatOf,
   horsTolerance,
@@ -139,32 +140,26 @@ export const OfCard = memo(function OfCard({ of }: Props) {
         )
       : null
 
-  // ---- Dates de fin projetées --------------------------------------------
-  // Deux projections de la date à laquelle l'OF sera terminé : l'une au rythme
-  // de la gamme, l'autre au rythme réellement tenu. L'écart entre les deux dit
-  // le retard qui se creuse.
+  // ---- Temps de production restant ----------------------------------------
+  // Deux estimations du temps qu'il reste à produire : l'une au rythme de la
+  // gamme, l'autre au rythme réellement tenu. L'écart entre les deux dit le
+  // retard qui se creuse.
   //
-  // Ce sont des minutes de PRODUCTION ajoutées à maintenant : la projection
-  // suppose une production continue, sans pause ni arrêt. La date réelle sera
-  // donc plus tardive — ces valeurs bornent l'optimisme, elles ne le prédisent
-  // pas.
+  // Ce sont des minutes de PRODUCTION pure : pauses, changements de format et
+  // pannes ne sont pas comptés. La ligne mettra donc plus longtemps — ces
+  // valeurs bornent l'optimisme, elles ne le prédisent pas.
+  //
+  // On affiche cette durée plutôt qu'une date de fin projetée : en atelier on
+  // raisonne en « il reste tant de temps », et une date calculée sur une
+  // production continue est de toute façon fausse dès la première pause.
   const restePieces =
     of.quantiteTotalPieces != null
       ? Math.max(0, of.quantiteTotalPieces - of.qteRempliTotalPieces)
       : null
-  const projeter = (minutes: number | null): string | null =>
-    minutes == null || restePieces === 0
-      ? null
-      : new Date(Date.now() + minutes * 60_000).toISOString()
-  const dateFinTheorique = projeter(
+  const resteCadenceTheorique =
     restePieces != null && of.cadencePiecesParMinute
-      ? restePieces / of.cadencePiecesParMinute
+      ? Math.round(restePieces / of.cadencePiecesParMinute)
       : null
-  )
-
-  const dateFinReelle = projeter(
-    restePieces != null && cadenceReelle ? restePieces / cadenceReelle : null
-  )
 
   // Temps écoulé depuis le démarrage RÉEL de la production (1er event OFDE),
   // pauses et arrêts compris. À comparer à "Durée Production (cumul)" qui, lui,
@@ -215,16 +210,63 @@ export const OfCard = memo(function OfCard({ of }: Props) {
         {/* Ligne 1 : identité de l'OF à gauche, statuts à droite */}
         <div className="flex items-center justify-between">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <span className="font-mono text-xl font-bold leading-tight text-wms">
+          <span className="font-mono text-2xl font-bold leading-tight text-wms">
             OF {formatOf(of.of)}
           </span>
-          <span className="text-base font-semibold leading-tight text-slate-700">
+          <span className="text-lg font-semibold leading-tight text-slate-700">
             <span className="font-mono">{of.codeArticle}</span>
             <span className="mx-1 text-slate-400">—</span>
             {of.designationArticle}
           </span>
           {/* Effectif masqué tant que l'OF n'a pas démarré : personne n'y est
               encore affecté, le chiffre ne voudrait rien dire. */}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {/* La durée est DANS la pastille : c'est la durée de CE statut, la
+              séparer en deux badges laissait croire à deux informations
+              indépendantes. Clic → historique complet. */}
+          <button
+            type="button"
+            onClick={() => setShowHistorique(true)}
+            title="Voir l'historique des statuts de l'OF"
+            className="rounded-full transition-transform hover:scale-105"
+          >
+            <StatusPill
+              status={of.statusUtilisateur}
+              duree={
+                dernierStatut
+                  ? formatDureeMinutes(dernierStatut.durationMin)
+                  : undefined
+              }
+            />
+          </button>
+          {/* Durées de production, réelle et théorique, côte à côte. Le budget
+              théorique porte sur l'OF ENTIER : le comparer au réel n'a de sens
+              qu'en fin d'OF. L'infobulle donne la comparaison à périmètre égal,
+              sur les pièces déjà produites. */}
+          {/* Statut logistique retiré d'ici : il porte sur la réception des
+              composants, il est donc à sa place dans le modal composants. */}
+          {/* Badge RETARD retiré de l'entête : les trois dates de fin
+              (ordo, théorique, réelle) disent déjà où en est l'OF. */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowLegend((s) => !s)}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+              title="Légende du timeline"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            {showLegend && (
+              <TimelineLegendPopover onClose={() => setShowLegend(false)} />
+            )}
+          </div>
+        </div>
+        </div>
+
+        {/* Ligne 2 : caractéristiques de l'OF. Sur une ligne à part pour ne pas
+            disputer la largeur aux pastilles de statut de la ligne 1. */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           {of.dateDebutProduction != null && (
             <span
               className={cn(
@@ -278,53 +320,6 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 : formatDateFr(of.dateFinOrdo)}
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {/* La durée est DANS la pastille : c'est la durée de CE statut, la
-              séparer en deux badges laissait croire à deux informations
-              indépendantes. Clic → historique complet. */}
-          <button
-            type="button"
-            onClick={() => setShowHistorique(true)}
-            title="Voir l'historique des statuts de l'OF"
-            className="rounded-full transition-transform hover:scale-105"
-          >
-            <StatusPill
-              status={of.statusUtilisateur}
-              duree={
-                dernierStatut
-                  ? formatDureeMinutes(dernierStatut.durationMin)
-                  : undefined
-              }
-            />
-          </button>
-          {/* Durées de production, réelle et théorique, côte à côte. Le budget
-              théorique porte sur l'OF ENTIER : le comparer au réel n'a de sens
-              qu'en fin d'OF. L'infobulle donne la comparaison à périmètre égal,
-              sur les pièces déjà produites. */}
-          {/* Statut logistique retiré d'ici : il porte sur la réception des
-              composants, il est donc à sa place dans le modal composants. */}
-          {/* Badge RETARD retiré de l'entête : les trois dates de fin
-              (ordo, théorique, réelle) disent déjà où en est l'OF. */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowLegend((s) => !s)}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
-              title="Légende du timeline"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-            {showLegend && (
-              <TimelineLegendPopover onClose={() => setShowLegend(false)} />
-            )}
-          </div>
-        </div>
-        </div>
-
-        {/* Ligne 2 : caractéristiques de l'OF. Sur une ligne à part pour ne pas
-            disputer la largeur aux pastilles de statut de la ligne 1. */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
           {of.dosage != null && (
             <span
               className={cn(
@@ -345,13 +340,21 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               className={cn(
                 BADGE_BASE,
                 "cursor-pointer transition-transform hover:scale-105",
-                of.nbComposantsReceptionnes >= of.nbTotalComposants
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                  : of.nbComposantsReceptionnes === 0
-                    ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                // Vert UNIQUEMENT si tous les composants sont reçus ET que
+                // chacun l'est en totalité : un OF peut afficher 5/5 tout en
+                // manquant de volume sur un composant.
+                of.nbComposantsReceptionnes === 0
+                  ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                  : of.nbComposantsReceptionnes >= of.nbTotalComposants &&
+                      of.nbComposantsQuantiteIncomplete === 0
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                     : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
               )}
-              title="Voir les composants PF"
+              title={
+                of.nbComposantsQuantiteIncomplete > 0
+                  ? `${of.nbComposantsQuantiteIncomplete} composant(s) réceptionné(s) en quantité insuffisante — cliquer pour le détail`
+                  : "Voir les composants PF"
+              }
             >
               {of.nbComposantsReceptionnes} / {of.nbTotalComposants} composants
             </button>
@@ -523,8 +526,8 @@ export const OfCard = memo(function OfCard({ of }: Props) {
               pct={livreSurPolypackPct}
             />
           </div>
-          {/* Chaque tuile associe une cadence à la date de fin qu'elle produit :
-              « à ce rythme, l'OF finit à cette heure ». L'écart entre les deux
+          {/* Chaque tuile associe une cadence au temps de production qu'elle
+              laisse : « à ce rythme, il reste tant ». L'écart entre les deux
               tuiles est directement l'écart au plan. */}
           {(cadenceReelle != null || of.cadencePiecesParMinute != null) && (
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -539,7 +542,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                       })
                     : null
                 }
-                date={dateFinReelle}
+                resteMinutes={resteCadenceReelle}
                 ton={
                   rendementPct == null
                     ? "neutre"
@@ -547,7 +550,7 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                       ? "ok"
                       : "alerte"
                 }
-                title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence de la gamme` : ""}. Fin projetée à ce rythme, production continue supposée.`}
+                title={`Cadence réellement tenue : ${of.qteRempliTotalPieces.toLocaleString("fr-FR")} pièces en ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective${of.cadencePiecesParMinute ? ` — soit ${rendementPct}% de la cadence de la gamme` : ""}. Reste à produire à ce rythme, hors pauses et arrêts.`}
               />
               <CadenceFinTuile
                 icone={Gauge}
@@ -557,9 +560,9 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                     ? formatNumber(of.cadencePiecesParMinute)
                     : null
                 }
-                date={dateFinTheorique}
+                resteMinutes={resteCadenceTheorique}
                 ton="theo"
-                title={`Cadence de la gamme${of.cadenceLibelle ? ` — ${of.cadenceLibelle}` : ""}. Fin projetée à ce rythme, production continue supposée.`}
+                title={`Cadence de la gamme${of.cadenceLibelle ? ` — ${of.cadenceLibelle}` : ""}. Reste à produire à ce rythme, hors pauses et arrêts.`}
               />
             </div>
           )}
@@ -600,11 +603,11 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 à opposer à la cadence théorique de la gamme. */}
             <MetricBox
               label="Durée Prod. à cadence réelle"
-              value={formatDureeMinutes(dureeTotaleCadenceReelle)}
+              value={formatHeuresMinutes(dureeTotaleCadenceReelle)}
               tone="cadence"
               title={
                 dureeTotaleCadenceReelle != null
-                  ? `Durée de production de tout l'OF au rythme constaté (${cadenceReelle!.toFixed(1)} pcs/min) — il en reste ${formatDureeMinutes(resteCadenceReelle)}`
+                  ? `Durée de production de tout l'OF au rythme constaté (${cadenceReelle!.toFixed(1)} pcs/min) — il en reste ${formatHeuresMinutes(resteCadenceReelle)}`
                   : "Cadence réelle non calculable : production pas encore démarrée, ou article au poids"
               }
             />
@@ -846,22 +849,22 @@ function TimelineLegendPopover({ onClose }: { onClose: () => void }) {
 }
 
 /**
- * Tuile « cadence → date de fin », au même gabarit que les MetricBox voisines.
- * La cadence en chiffre principal, la date de fin qu'elle implique juste en
- * dessous : chaque tuile se lit « à ce rythme, l'OF finit à cette heure ».
+ * Tuile « cadence → temps restant », au même gabarit que les MetricBox voisines.
+ * La cadence en chiffre principal, le temps de production qu'elle laisse juste
+ * en dessous : chaque tuile se lit « à ce rythme, il reste tant ».
  */
 function CadenceFinTuile({
   icone: Icone,
   libelle,
   cadence,
-  date,
+  resteMinutes,
   ton,
   title,
 }: {
   icone: React.ComponentType<{ className?: string }>
   libelle: string
   cadence: string | null
-  date: string | null
+  resteMinutes: number | null
   ton: "ok" | "alerte" | "theo" | "neutre"
   title?: string
 }) {
@@ -887,9 +890,9 @@ function CadenceFinTuile({
       </div>
       <div className="mt-0.5 text-sm font-semibold tabular-nums opacity-90">
         <span className="mr-1 text-[10px] font-semibold uppercase opacity-70">
-          Fin
+          Reste
         </span>
-        {date ? formatDateTimeFr(date) : "--"}
+        {formatHeuresMinutes(resteMinutes)}
       </div>
     </div>
   )
