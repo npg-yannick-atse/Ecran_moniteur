@@ -161,6 +161,25 @@ export const OfCard = memo(function OfCard({ of }: Props) {
       ? Math.round(restePieces / of.cadencePiecesParMinute)
       : null
 
+  // Écart entre l'effectif réellement affecté à l'OF (opération 0010) et celui
+  // que la ligne prévoit. "sur" = plus de monde que prévu, "sous" = moins.
+  //
+  // process.nombre_effectif vaut 0 sur une bonne partie des lignes : ce n'est
+  // pas "aucun opérateur prévu", c'est "pas renseigné". Sans ce garde-fou,
+  // toutes ces lignes passeraient en sur-effectif rouge en permanence.
+  const effectifPrevu =
+    of.nbEffectifLigne != null && of.nbEffectifLigne > 0
+      ? of.nbEffectifLigne
+      : null
+  const ecartEffectif: "sur" | "sous" | null =
+    of.nbEffectifOF != null && effectifPrevu != null
+      ? of.nbEffectifOF > effectifPrevu
+        ? "sur"
+        : of.nbEffectifOF < effectifPrevu
+          ? "sous"
+          : null
+      : null
+
   // Temps immobilisé sans produire : ce que l'OF a coûté à la ligne en pannes,
   // interruptions et pauses. Différence entre les deux cumuls de statuts.
   const tempsPerduMinutes =
@@ -278,13 +297,23 @@ export const OfCard = memo(function OfCard({ of }: Props) {
             <span
               className={cn(
                 BADGE_BASE,
-                of.nbEffectifOF != null &&
-                  of.nbEffectifLigne != null &&
-                  of.nbEffectifOF < of.nbEffectifLigne
-                  ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-slate-300 bg-slate-50 text-slate-700"
+                // Sur-effectif en ROUGE : plus d'opérateurs sur l'OF que la
+                // ligne n'en prévoit, c'est de la main-d'œuvre payée en trop et
+                // prise à une autre ligne. Le sous-effectif reste en orange :
+                // il explique une cadence basse sans être une anomalie de coût.
+                ecartEffectif === "sur"
+                  ? "border-rose-300 bg-rose-50 text-rose-700"
+                  : ecartEffectif === "sous"
+                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    : "border-slate-300 bg-slate-50 text-slate-700"
               )}
-              title="Effectif prévu sur la ligne / effectif affecté à l'OF (opération 0010)"
+              title={
+                ecartEffectif === "sur"
+                  ? `Sur-effectif : ${Math.round(of.nbEffectifOF!)} opérateurs sur l'OF alors que la ligne en prévoit ${of.nbEffectifLigne}`
+                  : ecartEffectif === "sous"
+                    ? `Sous-effectif : ${Math.round(of.nbEffectifOF!)} opérateurs sur l'OF alors que la ligne en prévoit ${of.nbEffectifLigne}`
+                    : "Effectif prévu sur la ligne / effectif affecté à l'OF (opération 0010)"
+              }
             >
               <span className="opacity-70">Effectif</span>{" "}
               {of.nbEffectifLigne != null ? of.nbEffectifLigne : "—"}
