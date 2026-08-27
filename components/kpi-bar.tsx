@@ -233,18 +233,17 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
       {STATUTS_LIGNE_2.map((label) => {
         const sc = parStatut.get(label)
         if (!sc) return null
-        // "OF Validé" porte deux chiffres dans une seule tuile : les OF dont
-        // les composants sont demandés, sur le total des validés. Les afficher
-        // dans deux tuiles séparées comptait les mêmes OF deux fois — un OF ne
-        // quitte pas le statut "OF Validé" quand la demande de composants part.
+        // La tuile "OF Validé" reste un compteur simple : le détail des OF déjà
+        // demandés passe par l'infobulle, pour ne pas empiéter sur la tuile
+        // "OF demandés non débutés" juste à côté.
         if (label === "OF Validé") {
           return (
             <Tile
               key={label}
-              value={`${kpis.nbOfValideDemande} / ${sc.count}`}
-              label="OF Validé (dont demandés)"
+              count={sc.count}
+              label={sc.label}
               color={sc.color}
-              title={`${sc.count} OF au statut "OF Validé", dont ${kpis.nbOfValideDemande} ont déjà leurs composants demandés — c'est la file d'attente réellement prête à partir. Les ${sc.count - kpis.nbOfValideDemande} autres attendent encore leur demande de composants.`}
+              title={`${sc.count} OF au statut "OF Validé", dont ${kpis.nbOfValideDemande} ont déjà leurs composants demandés.`}
             />
           )
         }
@@ -257,6 +256,12 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           />
         )
       })}
+      <Tile
+        count={kpis.nbOfDemandeNonDebute}
+        label="OF demandés non débutés"
+        color="#d97706"
+        title="OF dont les composants ont été demandés, dont la production n'a jamais commencé, et qui ont quitté le statut « OF Validé » — les validés en sont exclus pour qu'aucun OF ne soit compté dans les deux tuiles."
+      />
       <Tile
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
         label="Charge planifiée"

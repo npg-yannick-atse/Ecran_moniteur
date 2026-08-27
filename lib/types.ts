@@ -32,9 +32,11 @@ export interface KPIs {
    * C'est la file d'attente réelle : la matière a été appelée, la ligne
    * n'a pas encore lancé.
    */
+  // Composants demandés, production jamais commencée, et statut différent de
+  // "OF Validé" — l'exclusion garantit qu'aucun OF n'est compté à la fois ici
+  // et dans la tuile "OF Validé".
   nbOfDemandeNonDebute: number
-  // OF au statut "OF Validé" dont les composants sont déjà demandés — sous-
-  // ensemble de la tuile "OF Validé", pas un compteur qui s'y ajoute.
+  // Alimente l'infobulle de la tuile "OF Validé", pas un compteur affiché.
   nbOfValideDemande: number
   /**
    * Temps de production restant sur la ligne, en minutes — TOUS les OF, qu'ils

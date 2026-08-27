@@ -1871,14 +1871,24 @@ async function getDashboardImpl(
   ).length
   const ofsNonDebutes = ofRows.filter((r) => r.dateDebutProduction == null)
   const nbOfNonDebute = ofsNonDebutes.length
+  // OF demandés non débutés — les OF encore au statut "OF Validé" en sont
+  // EXCLUS, pour que cette tuile et la tuile "OF Validé" ne comptent jamais le
+  // même OF. Sans cette exclusion elles se recouvraient à 96 % : le WMS ne fait
+  // pas sortir l'OF du statut "OF Validé" quand la demande de composants part,
+  // donc 90 des 94 demandés non débutés y figuraient encore.
+  //
+  // Conséquence assumée : le compteur est bas (une poignée d'OF sur toute
+  // l'usine, en "Changement production" ou "Attente LABO"). Il remontera quand
+  // le service-of fera changer l'OF de statut à la demande de composants.
   const nbOfDemandeNonDebute = ofsNonDebutes.filter(
-    (r) => r.dateDemandeComposant != null
+    (r) =>
+      r.dateDemandeComposant != null &&
+      (r.statusUtilisateur.label ?? "").trim() !== "OF Validé"
   ).length
-  // Sous-ensemble des OF au statut "OF Validé" dont les composants sont déjà
-  // demandés. Un OF ne quitte PAS le statut "OF Validé" quand la demande part :
-  // 90 des 94 "demandés non débutés" y sont encore. Afficher les deux
-  // compteurs côte à côte revenait donc à compter ces 90 OF deux fois — d'où
-  // la tuile unique "demandés / validés".
+  // Part des OF "OF Validé" dont les composants sont déjà demandés. Sert
+  // uniquement à l'infobulle de la tuile "OF Validé" : ce sont eux la file
+  // d'attente réellement prête à partir, mais ils restent comptés dans leur
+  // statut, pas dans la tuile ci-dessus.
   const nbOfValideDemande = ofRows.filter(
     (r) =>
       (r.statusUtilisateur.label ?? "").trim() === "OF Validé" &&
