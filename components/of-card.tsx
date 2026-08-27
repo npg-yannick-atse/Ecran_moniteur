@@ -161,6 +161,13 @@ export const OfCard = memo(function OfCard({ of }: Props) {
       ? Math.round(restePieces / of.cadencePiecesParMinute)
       : null
 
+  // Temps immobilisé sans produire : ce que l'OF a coûté à la ligne en pannes,
+  // interruptions et pauses. Différence entre les deux cumuls de statuts.
+  const tempsPerduMinutes =
+    of.dureeOccupationMinutes != null && of.dureeProductionEcouleeMinutes != null
+      ? Math.max(0, of.dureeOccupationMinutes - of.dureeProductionEcouleeMinutes)
+      : null
+
   // Temps écoulé depuis le démarrage RÉEL de la production (1er event OFDE),
   // pauses et arrêts compris. À comparer à "Durée Production (cumul)" qui, lui,
   // ne compte que le temps effectivement produit : l'écart entre les deux est
@@ -609,6 +616,24 @@ export const OfCard = memo(function OfCard({ of }: Props) {
                 dureeTotaleCadenceReelle != null
                   ? `Durée de production de tout l'OF au rythme constaté (${cadenceReelle!.toFixed(1)} pcs/min) — il en reste ${formatHeuresMinutes(resteCadenceReelle)}`
                   : "Cadence réelle non calculable : production pas encore démarrée, ou article au poids"
+              }
+            />
+            {/* Le temps que l'OF a réellement pris à la ligne : production plus
+                les arrêts qu'aucun autre OF n'aurait pu combler. */}
+            <MetricBox
+              label="Durée Prod. + arrêts"
+              value={formatDureeMinutes(of.dureeOccupationMinutes)}
+              tone="cumul"
+              alerte={
+                tempsPerduMinutes != null &&
+                of.dureeOccupationMinutes != null &&
+                of.dureeOccupationMinutes > 0 &&
+                tempsPerduMinutes / of.dureeOccupationMinutes > 0.2
+              }
+              title={
+                of.dureeOccupationMinutes == null
+                  ? "L'OF n'a pas encore mobilisé la ligne"
+                  : `Temps où l'OF a mobilisé la ligne : ${formatDureeMinutes(of.dureeProductionEcouleeMinutes)} de production effective + ${formatDureeMinutes(tempsPerduMinutes)} de pannes, interruptions et pauses. Hors changements de production.`
               }
             />
           </div>

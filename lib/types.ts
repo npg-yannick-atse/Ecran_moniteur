@@ -201,6 +201,10 @@ export interface OfRow {
 
   // production restante (calculée depuis Of_has_statusUtilisateurs.duree_production)
   dureeProductionEcouleeMinutes: number | null // Σ duree_production côté OHSU
+  // Temps où l'OF a mobilisé la ligne : production + pannes + interruptions +
+  // les deux pauses. Toujours ≥ dureeProductionEcouleeMinutes ; l'écart entre
+  // les deux est le temps perdu sur l'OF.
+  dureeOccupationMinutes: number | null
   dureeResteProductionMinutes: number | null // extrapolation basée sur la cadence réelle
   dateFinProduction: string | null // ISO — now + dureeResteProductionMinutes
 

@@ -35,6 +35,28 @@ import type {
  * Ce filtre est injecté directement dans les requêtes SQL raw (WHERE).
  */
 
+/**
+ * Statuts utilisateur (ref_user_status.id) qui comptent dans la durée
+ * d'OCCUPATION de la ligne — le temps pendant lequel l'OF l'a mobilisée, qu'elle
+ * ait produit ou non. Codes préfixés "util-" comme dans statusHistoryPF.
+ *
+ *   2  OFDE  OF Débuté/En cours              — la ligne produit
+ *   10 PTE   Panne technique                 — arrêt subi
+ *   3  OFIN  OF Interrompu                   — arrêt
+ *   9  PPR   Pause production Planifiée
+ *   18 PNPL  Pause production Non Planifiée
+ *
+ * Volontairement absent : 11 CHG (Changement production), qui prépare l'OF
+ * suivant autant qu'il termine celui-ci.
+ */
+const CODES_OCCUPATION = new Set([
+  "util-2",
+  "util-10",
+  "util-3",
+  "util-9",
+  "util-18",
+])
+
 // =============================================================================
 // LOGS TIMING — pour voir en console quelle query prend du temps.
 //   - Activés uniquement hors prod OU si DASHBOARD_DEBUG=1
@@ -1551,6 +1573,19 @@ async function getDashboardImpl(
     const dureeEcoulee = statusHistoryPF
       .filter((p) => p.code === "util-2")
       .reduce((somme, p) => somme + p.durationMin, 0)
+    // Durée d'occupation de la ligne : le temps où l'OF a MOBILISÉ la ligne,
+    // qu'elle ait tourné ou non. On ajoute au temps produit les arrêts qui
+    // n'auraient pas pu être remplis par un autre OF :
+    //   util-2  OF Débuté/En cours       — la ligne produit
+    //   util-10 Panne technique          — arrêt subi
+    //   util-3  OF Interrompu            — arrêt
+    //   util-9  Pause production Planifiée
+    //   util-18 Pause production Non Planifiée
+    // Les changements de production (util-11) en sont exclus : ils appartiennent
+    // à l'OF suivant autant qu'à celui-ci. Écart avec dureeEcoulee = temps perdu.
+    const dureeOccupation = statusHistoryPF
+      .filter((p) => CODES_OCCUPATION.has(p.code))
+      .reduce((somme, p) => somme + p.durationMin, 0)
     const qteTheorique = r.qte_of ?? 0
     const resteQte = Math.max(0, qteTheorique - qteRempli)
     const dureeResteMinutes =
@@ -1620,6 +1655,7 @@ async function getDashboardImpl(
       estimationProd: estimationProd?.toISOString() ?? null,
 
       dureeProductionEcouleeMinutes: dureeEcoulee > 0 ? dureeEcoulee : null,
+      dureeOccupationMinutes: dureeOccupation > 0 ? dureeOccupation : null,
       dureeResteProductionMinutes: dureeResteMinutes,
       dateFinProduction: dateFinProduction?.toISOString() ?? null,
 
@@ -1768,11 +1804,16 @@ async function getDashboardImpl(
   //   2. OF Débuté (OFDE)
   //   3. En attente de livraison (statusProduction En Livraison / Livrer)
   //   4. Non débutés (OF Validé / Initialisé) — triés par dateDemandeComposant
-  //   5. Tous les autres statuts
+  //   5. Tous les autres statuts, pauses de production comprises
   const sortPriority = (r: (typeof ofRows)[number]): number => {
     const u = (r.statusUtilisateur.label ?? "").toLowerCase()
     const p = (r.statusProduction.label ?? "").toLowerCase()
     if (u.includes("panne")) return 0
+    // Un OF en pause ne produit pas : il ne doit pas remonter en haut de la
+    // liste. Le test passe AVANT celui sur le statut logistique, car un OF mis
+    // en pause garde souvent un statut "En Livraison"/"Livrer" qui le faisait
+    // atterrir dans le groupe 2, juste sous les OF réellement en cours.
+    if (u.includes("pause")) return 4
     if (u.includes("débuté") || u.includes("debute") || u === "of débuté") return 1
     if (
       p.includes("livraison") ||
