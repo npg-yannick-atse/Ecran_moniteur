@@ -564,6 +564,7 @@ async function getDashboardImpl(
         nbOfDemande: 0,
         nbOfNonDebute: 0,
         nbOfDemandeNonDebute: 0,
+        nbOfValideDemande: 0,
         dureeProductionResteMinutes: 0,
         dureeProductionResteEnCoursMinutes: 0,
         dureeProductionResteALancerMinutes: 0,
@@ -1873,6 +1874,16 @@ async function getDashboardImpl(
   const nbOfDemandeNonDebute = ofsNonDebutes.filter(
     (r) => r.dateDemandeComposant != null
   ).length
+  // Sous-ensemble des OF au statut "OF Validé" dont les composants sont déjà
+  // demandés. Un OF ne quitte PAS le statut "OF Validé" quand la demande part :
+  // 90 des 94 "demandés non débutés" y sont encore. Afficher les deux
+  // compteurs côte à côte revenait donc à compter ces 90 OF deux fois — d'où
+  // la tuile unique "demandés / validés".
+  const nbOfValideDemande = ofRows.filter(
+    (r) =>
+      (r.statusUtilisateur.label ?? "").trim() === "OF Validé" &&
+      r.dateDemandeComposant != null
+  ).length
 
   // Charge de production restante sur la ligne, en minutes de temps machine.
   // Compte TOUS les OF, pas seulement ceux à lancer : un OF démarré à 50 % a
@@ -1968,6 +1979,7 @@ async function getDashboardImpl(
     nbOfDemande,
     nbOfNonDebute,
     nbOfDemandeNonDebute,
+    nbOfValideDemande,
     dureeProductionResteMinutes,
     dureeProductionResteEnCoursMinutes,
     dureeProductionResteALancerMinutes,

@@ -33,6 +33,9 @@ export interface KPIs {
    * n'a pas encore lancé.
    */
   nbOfDemandeNonDebute: number
+  // OF au statut "OF Validé" dont les composants sont déjà demandés — sous-
+  // ensemble de la tuile "OF Validé", pas un compteur qui s'y ajoute.
+  nbOfValideDemande: number
   /**
    * Temps de production restant sur la ligne, en minutes — TOUS les OF, qu'ils
    * soient démarrés ou non. Par OF : pièces restantes ÷ cadence (pcs/min).

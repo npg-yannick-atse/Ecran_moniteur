@@ -128,7 +128,7 @@ function formatKpiWithTotal(
  * Ce sont les états d'attente : ce qui est prêt à partir, ou volontairement
  * suspendu. Ils sont retirés de la première ligne pour ne pas figurer 2 fois.
  */
-const STATUTS_LIGNE_2 = ["Pause production Planifiée"]
+const STATUTS_LIGNE_2 = ["OF Validé", "Pause production Planifiée"]
 
 export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
   const parStatut = new Map(kpis.statusCounts.map((s) => [s.label, s]))
@@ -233,6 +233,21 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
       {STATUTS_LIGNE_2.map((label) => {
         const sc = parStatut.get(label)
         if (!sc) return null
+        // "OF Validé" porte deux chiffres dans une seule tuile : les OF dont
+        // les composants sont demandés, sur le total des validés. Les afficher
+        // dans deux tuiles séparées comptait les mêmes OF deux fois — un OF ne
+        // quitte pas le statut "OF Validé" quand la demande de composants part.
+        if (label === "OF Validé") {
+          return (
+            <Tile
+              key={label}
+              value={`${kpis.nbOfValideDemande} / ${sc.count}`}
+              label="OF Validé (dont demandés)"
+              color={sc.color}
+              title={`${sc.count} OF au statut "OF Validé", dont ${kpis.nbOfValideDemande} ont déjà leurs composants demandés — c'est la file d'attente réellement prête à partir. Les ${sc.count - kpis.nbOfValideDemande} autres attendent encore leur demande de composants.`}
+            />
+          )
+        }
         return (
           <Tile
             key={label}
