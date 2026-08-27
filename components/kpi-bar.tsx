@@ -63,10 +63,14 @@ function Tile({
   return (
     <div
       className={cn(
-        // Largeur fixe, sans flex-1 : sinon 4 tuiles sur une ligne prennent un
-        // quart d'écran chacune. Elles se rangent maintenant de gauche à
-        // droite et la ligne s'arrête où elle doit.
-        "flex w-48 shrink-0 items-center gap-3 rounded-lg px-4 py-2",
+        // La tuile épouse son contenu, entre un plancher et un plafond :
+        //   - pas de flex-1, sinon 4 tuiles prennent un quart d'écran chacune ;
+        //   - pas de largeur fixe non plus, sinon "Attente LABO" occupe autant
+        //     que "Pause production Non Planifiée" et la barre déborde sur une
+        //     deuxième ligne à moitié vide.
+        // Le plafond force les libellés longs à passer sur deux lignes plutôt
+        // qu'à étirer la tuile.
+        "flex min-w-[7.5rem] max-w-[11rem] shrink-0 items-center gap-2.5 rounded-lg px-3 py-2",
         vide ? "bg-slate-50" : "bg-slate-100"
       )}
       title={title}
@@ -85,7 +89,7 @@ function Tile({
         >
           {display}
         </div>
-        <div className="text-xs font-bold uppercase leading-tight tracking-wide text-slate-900">
+        <div className="text-xs font-bold uppercase leading-tight tracking-tight text-slate-900">
           {label}
         </div>
       </div>
