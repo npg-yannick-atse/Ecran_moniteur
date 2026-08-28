@@ -42,12 +42,15 @@ function Tile({
   label,
   color,
   title,
+  className,
 }: {
   count?: number
   value?: string
   label: string
   color: string
   title?: string
+  /** Contraintes de largeur imposées par la rangée qui l'accueille. */
+  className?: string
 }) {
   const display = value ?? String(count ?? 0)
   // Le liseré garde la couleur brute du statut ; le chiffre l'assombrit, sinon
@@ -63,15 +66,12 @@ function Tile({
   return (
     <div
       className={cn(
-        // La tuile épouse son contenu, entre un plancher et un plafond :
-        //   - pas de flex-1, sinon 4 tuiles prennent un quart d'écran chacune ;
-        //   - pas de largeur fixe non plus, sinon "Attente LABO" occupe autant
-        //     que "Pause production Non Planifiée" et la barre déborde sur une
-        //     deuxième ligne à moitié vide.
-        // Le plafond force les libellés longs à passer sur deux lignes plutôt
-        // qu'à étirer la tuile.
-        "flex min-w-[7.5rem] max-w-[11rem] shrink-0 items-center gap-2.5 rounded-lg px-3 py-2",
-        vide ? "bg-slate-50" : "bg-slate-100"
+        // Aucune largeur ici : c'est la rangée qui la fixe. La rangée du haut
+        // est une grille dont les colonnes s'étirent, la rangée du bas un flex
+        // où les tuiles gardent une taille bornée.
+        "flex items-center gap-2.5 rounded-lg px-3 py-2",
+        vide ? "bg-slate-50" : "bg-slate-100",
+        className
       )}
       title={title}
     >
@@ -130,16 +130,25 @@ function formatKpiWithTotal(
  */
 const STATUTS_LIGNE_2 = ["OF Validé", "Pause production Planifiée"]
 
+/**
+ * Largeur des tuiles de la rangée du bas. Elles sont peu nombreuses et centrées :
+ * les étirer comme celles du haut leur donnerait un quart d'écran chacune.
+ */
+const TUILE_LIGNE_2 = "min-w-[8.5rem] max-w-[12rem] shrink-0"
+
 export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
   const parStatut = new Map(kpis.statusCounts.map((s) => [s.label, s]))
   const statutsLigne1 = kpis.statusCounts.filter(
     (s) => !STATUTS_LIGNE_2.includes(s.label)
   )
-  // flex-wrap : le référentiel complet fait une quinzaine de tuiles, elles ne
-  // tiennent plus sur une seule ligne comme avant.
   return (
     <div className="border-b border-slate-200 bg-white px-6 py-4">
-    <div className="flex flex-wrap gap-3">
+    {/* Grille auto-fit plutôt qu'un flex-wrap : le navigateur place autant de
+        colonnes de 8,5 rem minimum qu'il en tient, puis les étire à parts
+        égales. Plus de blanc à droite sur les grands écrans, et sur les petits
+        les tuiles rétrécissent avant de passer à la ligne — quand elles y
+        passent, elles restent alignées en colonnes au lieu de finir en escalier. */}
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-3">
       {ITEMS.map((item) => {
         const value = kpis[item.key] as number
         const total = item.totalKey ? (kpis[item.totalKey] as number) : null
@@ -243,6 +252,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
               count={sc.count}
               label={sc.label}
               color={sc.color}
+              className={TUILE_LIGNE_2}
               title={`${sc.count} OF au statut "OF Validé", dont ${kpis.nbOfValideDemande} ont déjà leurs composants demandés.`}
             />
           )
@@ -253,6 +263,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
             count={sc.count}
             label={sc.label}
             color={sc.color}
+            className={TUILE_LIGNE_2}
           />
         )
       })}
@@ -264,6 +275,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
           count={kpis.nbOfDemandeNonDebute}
           label="OF demandés non débutés"
           color="#d97706"
+          className={TUILE_LIGNE_2}
           title="OF dont les composants ont été demandés, dont la production n'a jamais commencé, et qui ont quitté le statut « OF Validé » — les validés en sont exclus pour qu'aucun OF ne soit compté dans les deux tuiles."
         />
       )}
@@ -271,6 +283,7 @@ export function KpiBar({ kpis, activeFilter, onFilterChange }: Props) {
         value={formatHeuresMinutes(kpis.dureeProductionResteMinutes)}
         label="Charge planifiée"
         color="#7c3aed"
+        className={TUILE_LIGNE_2}
         title={
           `Temps de production restant sur la ligne, tous OF confondus : ` +
           `${formatHeuresMinutes(kpis.dureeProductionResteEnCoursMinutes)} sur les OF démarrés ` +
